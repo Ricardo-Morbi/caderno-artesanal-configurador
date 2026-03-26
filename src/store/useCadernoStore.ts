@@ -17,6 +17,7 @@ const configuracaoPadrao: ConfiguracaoCaderno = {
   estampaCapa: 'nenhuma',
   gravacaoCapa: 'nenhuma',
   nomeGravado: '',
+  posicaoGravacao: 'centro',
   aplicacoesCapa: [],
 
   // Etapa 3

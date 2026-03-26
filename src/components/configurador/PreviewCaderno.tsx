@@ -86,12 +86,23 @@ function luminancia(hex: string): number {
   return 0.299 * r + 0.587 * g + 0.114 * b
 }
 
+// Calcula Y do texto baseado na posição escolhida
+function calcularCY(posicao: string, cy: number, altura: number): number {
+  switch (posicao) {
+    case 'terco-superior':    return cy - altura * 0.28
+    case 'terco-inferior':    return cy + altura * 0.28
+    case 'canto-inf-direito': return cy + altura * 0.38
+    default:                  return cy  // 'centro'
+  }
+}
+
 // Renderiza o texto gravado na capa com a estética do tipo escolhido
 function GravacaoCapa({
-  texto, tipo, cx, cy, largura, altura, corCapa,
+  texto, tipo, posicao, cx, cy, largura, altura, corCapa,
 }: {
   texto: string
   tipo: string
+  posicao: string
   cx: number
   cy: number
   largura: number
@@ -102,6 +113,12 @@ function GravacaoCapa({
 
   const lum = corCapa.startsWith('#') ? luminancia(corCapa) : 0.5
   const ehEscuro = lum < 0.45
+
+  // Posição Y ajustada
+  const textCY = calcularCY(posicao, cy, altura)
+  // Para assinatura: alinhar à direita
+  const textCX = posicao === 'canto-inf-direito' ? cx + largura * 0.28 : cx
+  const anchor  = posicao === 'canto-inf-direito' ? 'end' : 'middle'
 
   // Quebra o texto em linhas (máx 18 chars por linha)
   const palavras = texto.split(' ')
@@ -117,143 +134,183 @@ function GravacaoCapa({
   }
   if (linhaAtual) linhas.push(linhaAtual.trim())
 
-  const fontSize = Math.min(largura / 10, 10)
+  const fontSize   = posicao === 'canto-inf-direito'
+    ? Math.min(largura / 14, 7)
+    : Math.min(largura / 10, 10)
   const lineHeight = fontSize * 1.6
   const totalHeight = linhas.length * lineHeight
-  const yInicio = cy - totalHeight / 2 + lineHeight / 2
+  const yInicio = textCY - totalHeight / 2 + lineHeight / 2
 
   if (tipo === 'baixo-relevo') {
-    // Texto afundado: mesma cor da capa mas mais escuro/claro, sem contorno
     const corTexto = ehEscuro ? 'rgba(255,255,255,0.18)' : 'rgba(0,0,0,0.22)'
-    const corSombra = ehEscuro ? 'rgba(0,0,0,0.35)' : 'rgba(255,255,255,0.6)'
+    const corSombra = ehEscuro ? 'rgba(0,0,0,0.5)' : 'rgba(255,255,255,0.75)'
     return (
       <g>
         <defs>
-          <filter id="baixo-relevo-filter">
-            <feDropShadow dx="0.4" dy="0.6" stdDeviation="0.3" floodColor={corSombra} floodOpacity="1" />
+          <filter id="baixo-relevo-filter" x="-20%" y="-20%" width="140%" height="140%">
+            {/* Sombra interna — luz vem de cima-esquerda */}
+            <feDropShadow dx="0.6" dy="0.8" stdDeviation="0.4" floodColor={corSombra} floodOpacity="1" result="shadow-out" />
+            <feDropShadow dx="-0.4" dy="-0.5" stdDeviation="0.3"
+              floodColor={ehEscuro ? 'rgba(255,255,255,0.08)' : 'rgba(0,0,0,0.12)'}
+              floodOpacity="1" result="highlight" />
           </filter>
         </defs>
         {linhas.map((linha, i) => (
-          <text
-            key={i}
-            x={cx}
-            y={yInicio + i * lineHeight}
-            textAnchor="middle"
-            dominantBaseline="middle"
-            fontSize={fontSize}
-            fontFamily="Georgia, serif"
-            letterSpacing="0.08em"
-            fill={corTexto}
+          <text key={i}
+            x={textCX} y={yInicio + i * lineHeight}
+            textAnchor={anchor} dominantBaseline="middle"
+            fontSize={fontSize} fontFamily="Georgia, serif"
+            letterSpacing="0.12em" fill={corTexto}
             filter="url(#baixo-relevo-filter)"
-          >
-            {linha}
-          </text>
+          >{linha}</text>
         ))}
       </g>
     )
   }
 
   if (tipo === 'alto-relevo') {
-    // Texto elevado: cor clara/escura com sombra pronunciada
-    const corTexto = ehEscuro ? 'rgba(255,255,255,0.85)' : 'rgba(0,0,0,0.7)'
-    const corSombra = ehEscuro ? 'rgba(0,0,0,0.6)' : 'rgba(255,255,255,0.9)'
+    const corTexto    = ehEscuro ? 'rgba(255,255,255,0.92)' : 'rgba(20,10,5,0.82)'
+    const corBase     = ehEscuro ? 'rgba(0,0,0,0.65)' : 'rgba(0,0,0,0.35)'
+    const corHighlight= ehEscuro ? 'rgba(255,255,255,0.35)' : 'rgba(255,255,255,0.7)'
     return (
       <g>
-        <defs>
-          <filter id="alto-relevo-filter">
-            <feDropShadow dx="1" dy="1.5" stdDeviation="0.5" floodColor={corSombra} floodOpacity="1" />
-            <feDropShadow dx="-0.5" dy="-0.5" stdDeviation="0.3" floodColor={ehEscuro ? 'rgba(255,255,255,0.2)' : 'rgba(0,0,0,0.15)'} floodOpacity="1" result="shadow2" />
-          </filter>
-        </defs>
-        {/* Sombra de profundidade */}
+        {/* Sombra de profundidade (fundo) */}
         {linhas.map((linha, i) => (
-          <text
-            key={`shadow-${i}`}
-            x={cx + 0.8}
-            y={yInicio + i * lineHeight + 1.2}
-            textAnchor="middle"
-            dominantBaseline="middle"
-            fontSize={fontSize}
-            fontFamily="Georgia, serif"
-            letterSpacing="0.08em"
-            fill={ehEscuro ? 'rgba(0,0,0,0.5)' : 'rgba(0,0,0,0.3)'}
-          >
-            {linha}
-          </text>
+          <text key={`d-${i}`}
+            x={textCX + 1.2} y={yInicio + i * lineHeight + 1.8}
+            textAnchor={anchor} dominantBaseline="middle"
+            fontSize={fontSize} fontFamily="Georgia, serif"
+            letterSpacing="0.12em" fill={corBase}
+          >{linha}</text>
         ))}
+        {/* Highlight superior (topo elevado) */}
         {linhas.map((linha, i) => (
-          <text
-            key={i}
-            x={cx}
-            y={yInicio + i * lineHeight}
-            textAnchor="middle"
-            dominantBaseline="middle"
-            fontSize={fontSize}
-            fontFamily="Georgia, serif"
-            letterSpacing="0.08em"
-            fill={corTexto}
-            filter="url(#alto-relevo-filter)"
-          >
-            {linha}
-          </text>
+          <text key={`h-${i}`}
+            x={textCX - 0.4} y={yInicio + i * lineHeight - 0.6}
+            textAnchor={anchor} dominantBaseline="middle"
+            fontSize={fontSize} fontFamily="Georgia, serif"
+            letterSpacing="0.12em" fill={corHighlight}
+          >{linha}</text>
+        ))}
+        {/* Texto principal */}
+        {linhas.map((linha, i) => (
+          <text key={i}
+            x={textCX} y={yInicio + i * lineHeight}
+            textAnchor={anchor} dominantBaseline="middle"
+            fontSize={fontSize} fontFamily="Georgia, serif"
+            letterSpacing="0.12em" fill={corTexto}
+          >{linha}</text>
         ))}
       </g>
     )
   }
 
   if (tipo === 'bordado') {
-    // Texto bordado: stroke pontilhado simulando ponto de costura, cor contrastante
-    const corFio = ehEscuro ? '#F5E6C8' : '#5C3D2E'
-    const corSombra = ehEscuro ? 'rgba(0,0,0,0.4)' : 'rgba(255,255,255,0.5)'
+    // Cores do fio — contrastantes e saturadas como linha de bordar real
+    const corFioPrincipal = ehEscuro ? '#F5DFA0' : '#7B2D2D'
+    const corFioSombra    = ehEscuro ? 'rgba(0,0,0,0.55)' : 'rgba(0,0,0,0.3)'
+    const corFioHighlight = ehEscuro ? 'rgba(255,255,220,0.6)' : 'rgba(255,180,120,0.5)'
+
+    // Largura do texto estimada para decoração
+    const largTextoEst = Math.min(texto.length * fontSize * 0.6, largura * 0.7)
+
     return (
       <g>
-        {/* Contorno de base (shadow) para profundidade */}
-        {linhas.map((linha, i) => (
-          <text
-            key={`shadow-${i}`}
-            x={cx + 0.5}
-            y={yInicio + i * lineHeight + 0.8}
-            textAnchor="middle"
-            dominantBaseline="middle"
-            fontSize={fontSize}
-            fontFamily="Georgia, serif"
-            letterSpacing="0.08em"
-            fill="none"
-            stroke={corSombra}
-            strokeWidth={1.8}
-          >
-            {linha}
-          </text>
-        ))}
-        {/* Fio de bordado — stroke pontilhado */}
-        {linhas.map((linha, i) => (
-          <text
-            key={i}
-            x={cx}
-            y={yInicio + i * lineHeight}
-            textAnchor="middle"
-            dominantBaseline="middle"
-            fontSize={fontSize}
-            fontFamily="Georgia, serif"
-            letterSpacing="0.08em"
-            fill="none"
-            stroke={corFio}
-            strokeWidth={1.4}
-            strokeDasharray="2 1.5"
-            strokeLinecap="round"
-            strokeLinejoin="round"
-          >
-            {linha}
-          </text>
-        ))}
-        {/* Pontos decorativos de cada lado (simulam pontos de bordado) */}
-        {linhas.map((_, i) => {
+        <defs>
+          {/* Filtro de textura de fio */}
+          <filter id="bordado-filter" x="-5%" y="-20%" width="110%" height="140%">
+            <feTurbulence type="fractalNoise" baseFrequency="0.9" numOctaves="3" result="noise" />
+            <feDisplacementMap in="SourceGraphic" in2="noise" scale="0.3" xChannelSelector="R" yChannelSelector="G" />
+          </filter>
+        </defs>
+
+        {linhas.map((linha, i) => {
           const y = yInicio + i * lineHeight
-          const margemX = largura * 0.12
+          const xEsq = textCX - largTextoEst / 2
+          const xDir = textCX + largTextoEst / 2
+
           return (
-            <g key={`pontos-${i}`}>
-              <circle cx={cx - largura / 2 + margemX} cy={y} r={0.8} fill={corFio} opacity={0.7} />
-              <circle cx={cx + largura / 2 - margemX} cy={y} r={0.8} fill={corFio} opacity={0.7} />
+            <g key={i}>
+              {/* ── Linhas decorativas de bastidor ── */}
+              {i === 0 && (
+                <>
+                  {/* Linha superior decorativa */}
+                  <line x1={xEsq} y1={y - fontSize * 1.1}
+                    x2={xDir} y2={y - fontSize * 1.1}
+                    stroke={corFioPrincipal} strokeWidth="0.5"
+                    strokeDasharray="1.5 1.2" opacity="0.5" strokeLinecap="round" />
+                  {/* Pontos cruzados nas extremidades (ponto de ancoragem) */}
+                  <line x1={xEsq - 1} y1={y - fontSize * 1.3} x2={xEsq + 1} y2={y - fontSize * 0.9}
+                    stroke={corFioPrincipal} strokeWidth="0.6" />
+                  <line x1={xEsq + 1} y1={y - fontSize * 1.3} x2={xEsq - 1} y2={y - fontSize * 0.9}
+                    stroke={corFioPrincipal} strokeWidth="0.6" />
+                  <line x1={xDir - 1} y1={y - fontSize * 1.3} x2={xDir + 1} y2={y - fontSize * 0.9}
+                    stroke={corFioPrincipal} strokeWidth="0.6" />
+                  <line x1={xDir + 1} y1={y - fontSize * 1.3} x2={xDir - 1} y2={y - fontSize * 0.9}
+                    stroke={corFioPrincipal} strokeWidth="0.6" />
+                </>
+              )}
+              {i === linhas.length - 1 && (
+                <>
+                  {/* Linha inferior decorativa */}
+                  <line x1={xEsq} y1={y + fontSize * 0.9}
+                    x2={xDir} y2={y + fontSize * 0.9}
+                    stroke={corFioPrincipal} strokeWidth="0.5"
+                    strokeDasharray="1.5 1.2" opacity="0.5" strokeLinecap="round" />
+                  <line x1={xEsq - 1} y1={y + fontSize * 0.7} x2={xEsq + 1} y2={y + fontSize * 1.1}
+                    stroke={corFioPrincipal} strokeWidth="0.6" />
+                  <line x1={xEsq + 1} y1={y + fontSize * 0.7} x2={xEsq - 1} y2={y + fontSize * 1.1}
+                    stroke={corFioPrincipal} strokeWidth="0.6" />
+                  <line x1={xDir - 1} y1={y + fontSize * 0.7} x2={xDir + 1} y2={y + fontSize * 1.1}
+                    stroke={corFioPrincipal} strokeWidth="0.6" />
+                  <line x1={xDir + 1} y1={y + fontSize * 0.7} x2={xDir - 1} y2={y + fontSize * 1.1}
+                    stroke={corFioPrincipal} strokeWidth="0.6" />
+                </>
+              )}
+
+              {/* ── Texto bordado em 3 camadas ── */}
+
+              {/* Camada 1: sombra de profundidade */}
+              <text
+                x={textCX + 0.7} y={y + 1}
+                textAnchor={anchor} dominantBaseline="middle"
+                fontSize={fontSize} fontFamily="Georgia, serif"
+                letterSpacing="0.1em"
+                fill="none" stroke={corFioSombra} strokeWidth={2.8}
+                strokeLinecap="round" strokeLinejoin="round"
+              >{linha}</text>
+
+              {/* Camada 2: fio principal grosso (corpo do bordado) */}
+              <text
+                x={textCX} y={y}
+                textAnchor={anchor} dominantBaseline="middle"
+                fontSize={fontSize} fontFamily="Georgia, serif"
+                letterSpacing="0.1em"
+                fill="none" stroke={corFioPrincipal} strokeWidth={2}
+                strokeLinecap="round" strokeLinejoin="round"
+              >{linha}</text>
+
+              {/* Camada 3: textura de ponto (linha fina tracejada por cima) */}
+              <text
+                x={textCX} y={y}
+                textAnchor={anchor} dominantBaseline="middle"
+                fontSize={fontSize} fontFamily="Georgia, serif"
+                letterSpacing="0.1em"
+                fill="none" stroke={corFioPrincipal} strokeWidth={1.2}
+                strokeDasharray="1.8 1.4" strokeLinecap="round" strokeLinejoin="round"
+                opacity="0.9"
+              >{linha}</text>
+
+              {/* Camada 4: highlight do fio (brilho do fio metálico) */}
+              <text
+                x={textCX - 0.3} y={y - 0.5}
+                textAnchor={anchor} dominantBaseline="middle"
+                fontSize={fontSize} fontFamily="Georgia, serif"
+                letterSpacing="0.1em"
+                fill="none" stroke={corFioHighlight} strokeWidth={0.6}
+                strokeLinecap="round" strokeLinejoin="round"
+                opacity="0.7"
+              >{linha}</text>
             </g>
           )
         })}
@@ -337,7 +394,7 @@ export default function PreviewCaderno() {
   const {
     tamanho, formato, espessura,
     corCapa, materialCapa, estampaCapa,
-    gravacaoCapa, nomeGravado, aplicacoesCapa,
+    gravacaoCapa, nomeGravado, posicaoGravacao, aplicacoesCapa,
     tipoEncadernacao, tipoLombada,
     elasticoAtivo, corElastico, posicaoElastico,
     marcadorAtivo, corMarcador, corFio,
@@ -546,6 +603,7 @@ export default function PreviewCaderno() {
             <GravacaoCapa
               texto={nomeGravado ?? ''}
               tipo={gravacaoCapa ?? 'nenhuma'}
+              posicao={posicaoGravacao ?? 'centro'}
               cx={capaCX}
               cy={capaCY}
               largura={larguraCapa}

@@ -33,6 +33,12 @@ export type GravacaoCapa =
   | 'alto-relevo'
   | 'bordado'
 
+export type PosicaoGravacao =
+  | 'centro'
+  | 'terco-superior'
+  | 'terco-inferior'
+  | 'canto-inf-direito'
+
 export type AplicacaoCapa =
   | 'renda'
   | 'botoes'
@@ -117,6 +123,7 @@ export interface ConfiguracaoCaderno {
   estampaCapa: EstampaCapa
   gravacaoCapa: GravacaoCapa
   nomeGravado: string       // texto livre para gravação
+  posicaoGravacao: PosicaoGravacao
   aplicacoesCapa: AplicacaoCapa[]
 
   // Etapa 3 — Encadernação

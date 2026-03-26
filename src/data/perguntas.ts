@@ -162,6 +162,23 @@ export const TODAS_PERGUNTAS: Pergunta[] = [
   },
 
   {
+    id: 'posicaoGravacao',
+    grupo: 2,
+    titulo: 'Onde fica a gravação na capa?',
+    descricao: 'Escolha o posicionamento do texto na capa',
+    tipo: 'selecao-grade',
+    campo: 'posicaoGravacao',
+    avancaAutomatico: true,
+    visivel: (c) => c.gravacaoCapa !== 'nenhuma' && c.nomeGravado.trim().length > 0,
+    opcoes: [
+      { valor: 'terco-superior',    label: 'Topo',           descricao: 'Terço superior — centralizado' },
+      { valor: 'centro',            label: 'Centro',          descricao: 'Meio da capa — destaque máximo' },
+      { valor: 'terco-inferior',    label: 'Base',            descricao: 'Terço inferior — centralizado' },
+      { valor: 'canto-inf-direito', label: 'Assinatura',      descricao: 'Canto inferior direito — discreto' },
+    ],
+  },
+
+  {
     id: 'aplicacoesCapa',
     grupo: 2,
     titulo: 'Quer aplicações extras na capa?',
