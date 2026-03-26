@@ -69,12 +69,12 @@ const configuracaoPadrao: ConfiguracaoCaderno = {
 interface CadernoStore {
   // Estado atual
   configuracao: ConfiguracaoCaderno
-  etapaAtual: number
+  perguntaIndex: number   // índice dentro da lista filtrada de perguntas
 
-  // Ações de navegação
-  irParaEtapa: (numero: number) => void
-  avancarEtapa: () => void
-  voltarEtapa: () => void
+  // Ações de navegação por pergunta
+  irParaPergunta: (index: number) => void
+  avancarPergunta: (total: number) => void
+  voltarPergunta: () => void
 
   // Ação genérica para atualizar qualquer campo
   atualizarOpcao: <K extends keyof ConfiguracaoCaderno>(
@@ -95,18 +95,18 @@ interface CadernoStore {
 
 export const useCadernoStore = create<CadernoStore>((set) => ({
   configuracao: configuracaoPadrao,
-  etapaAtual: 1,
+  perguntaIndex: 0,
 
-  irParaEtapa: (numero) => set({ etapaAtual: numero }),
+  irParaPergunta: (index) => set({ perguntaIndex: index }),
 
-  avancarEtapa: () =>
+  avancarPergunta: (total) =>
     set((state) => ({
-      etapaAtual: Math.min(state.etapaAtual + 1, 7),
+      perguntaIndex: Math.min(state.perguntaIndex + 1, total - 1),
     })),
 
-  voltarEtapa: () =>
+  voltarPergunta: () =>
     set((state) => ({
-      etapaAtual: Math.max(state.etapaAtual - 1, 1),
+      perguntaIndex: Math.max(state.perguntaIndex - 1, 0),
     })),
 
   atualizarOpcao: (campo, valor) =>
@@ -133,5 +133,5 @@ export const useCadernoStore = create<CadernoStore>((set) => ({
     }),
 
   resetarConfiguracoes: () =>
-    set({ configuracao: configuracaoPadrao, etapaAtual: 1 }),
+    set({ configuracao: configuracaoPadrao, perguntaIndex: 0 }),
 }))

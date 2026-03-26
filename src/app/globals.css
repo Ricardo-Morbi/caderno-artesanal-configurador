@@ -4,10 +4,18 @@
 
 @layer base {
   :root {
-    --cor-fundo: #FDF8F0;
-    --cor-texto: #3D2B1F;
-    --cor-acento: #C4713C;
-    --cor-borda: #E8D5B7;
+    --cor-fundo:   #FAFAF5;
+    --cor-texto:   #1A1818;
+    --cor-acento:  #C9A84C;
+    --cor-borda:   #EEE9E0;
+    --cor-branco:  #FFFFFF;
+  }
+
+  /* Área segura para iPhones com notch/home indicator */
+  @supports (padding: max(0px)) {
+    .safe-bottom {
+      padding-bottom: max(12px, env(safe-area-inset-bottom));
+    }
   }
 
   * {
@@ -21,43 +29,61 @@
   body {
     background-color: var(--cor-fundo);
     color: var(--cor-texto);
-    font-family: 'Inter', system-ui, sans-serif;
+    font-family: 'DM Sans', Inter, system-ui, sans-serif;
     -webkit-font-smoothing: antialiased;
     -moz-osx-font-smoothing: grayscale;
   }
 
   h1, h2, h3 {
-    font-family: Georgia, Cambria, 'Times New Roman', serif;
+    font-family: 'Playfair Display', Georgia, Cambria, 'Times New Roman', serif;
+    letter-spacing: -0.01em;
   }
 }
 
 @layer components {
+  /* Botão primário — ouro Montblanc */
   .botao-primario {
-    @apply bg-terracota-400 hover:bg-terracota-500 text-white font-medium px-6 py-3 rounded-lg
-           transition-all duration-200 active:scale-95 shadow-sm hover:shadow-md;
+    @apply bg-onix-700 hover:bg-onix-800 text-ivoire-100
+           font-sans font-medium tracking-widest text-xs uppercase
+           px-6 py-3 transition-all duration-200 active:scale-95;
   }
 
+  /* Botão secundário — contorno fino */
   .botao-secundario {
-    @apply border border-marrom-300 hover:border-marrom-400 text-marrom-500 hover:text-marrom-600
-           font-medium px-6 py-3 rounded-lg transition-all duration-200 active:scale-95;
+    @apply border border-onix-200 hover:border-onix-400
+           text-onix-500 hover:text-onix-700
+           font-sans font-medium tracking-widest text-xs uppercase
+           px-6 py-3 transition-all duration-200 active:scale-95;
   }
 
+  /* Card de opção — linha fina, sem arredondamento */
   .cartao-opcao {
-    @apply border-2 border-creme-300 rounded-xl p-3 cursor-pointer
-           transition-all duration-200 hover:border-terracota-300 hover:shadow-sm;
+    @apply border border-ivoire-400 p-4 cursor-pointer
+           transition-all duration-200 hover:border-onix-300;
   }
 
   .cartao-opcao-selecionado {
-    @apply border-terracota-400 bg-terracota-100 shadow-sm;
+    @apply border-onix-600 bg-white shadow-luxo;
   }
 
+  /* Seletor de cor */
   .seletor-cor {
-    @apply w-8 h-8 rounded-full cursor-pointer border-2 border-transparent
-           transition-all duration-150 hover:scale-110 hover:border-marrom-300;
+    @apply w-9 h-9 rounded-full cursor-pointer border-2 border-transparent
+           transition-all duration-150 hover:scale-105;
   }
 
   .seletor-cor-selecionado {
-    @apply border-marrom-500 scale-110 ring-2 ring-marrom-300 ring-offset-1;
+    @apply border-onix-600 scale-110 ring-2 ring-onix-300 ring-offset-2;
+  }
+
+  /* Linha divisória ouro */
+  .divisor-ouro {
+    @apply border-t border-ouro-300 w-12 mx-auto my-4;
+  }
+
+  /* Label de categoria — tracking muito aberto */
+  .label-categoria {
+    @apply text-xs font-sans font-medium text-onix-300 uppercase tracking-widest;
   }
 }
 
@@ -71,7 +97,11 @@
   }
 
   .scrollbar-fino::-webkit-scrollbar-thumb {
-    background-color: #D4B896;
+    background-color: var(--cor-borda);
     border-radius: 999px;
   }
+
+  /* Remove scrollbar horizontal nos chips */
+  .no-scrollbar::-webkit-scrollbar { display: none; }
+  .no-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
 }
