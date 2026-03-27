@@ -2,7 +2,13 @@
 
 import { useCadernoStore } from '@/store/useCadernoStore'
 import { CORES_ELASTICO_PADRAO } from '@/types/caderno'
-import type { TipoMarcador, PosicaoElastico } from '@/types/caderno'
+import type { TipoMarcador, PosicaoElastico, LarguraMarcador } from '@/types/caderno'
+
+const opcoesLarguraMarcador: { valor: LarguraMarcador; label: string; descricao: string }[] = [
+  { valor: 'fino',  label: 'Fino',  descricao: '~3 mm' },
+  { valor: 'medio', label: 'Médio', descricao: '~5 mm' },
+  { valor: 'largo', label: 'Largo', descricao: '~8 mm' },
+]
 
 const CORES_MARCADOR = [
   { nome: 'Terracota', hex: '#C4713C' },
@@ -125,6 +131,25 @@ export default function EtapaElementosFuncionais() {
                     onClick={() => atualizarOpcao('tipoMarcador', opcao.valor)}
                     className={`flex-1 cartao-opcao text-center py-2 transition-all duration-200 ${
                       configuracao.tipoMarcador === opcao.valor ? 'cartao-opcao-selecionado' : ''
+                    }`}
+                  >
+                    <span className="block text-xs font-medium text-marrom-500">{opcao.label}</span>
+                    <span className="block text-xs text-marrom-300">{opcao.descricao}</span>
+                  </button>
+                ))}
+              </div>
+            </div>
+
+            {/* Largura do marcador */}
+            <div>
+              <p className="text-xs text-marrom-400 mb-2">Largura</p>
+              <div className="flex gap-2">
+                {opcoesLarguraMarcador.map((opcao) => (
+                  <button
+                    key={opcao.valor}
+                    onClick={() => atualizarOpcao('larguraMarcador', opcao.valor)}
+                    className={`flex-1 cartao-opcao text-center py-2 transition-all duration-200 ${
+                      configuracao.larguraMarcador === opcao.valor ? 'cartao-opcao-selecionado' : ''
                     }`}
                   >
                     <span className="block text-xs font-medium text-marrom-500">{opcao.label}</span>

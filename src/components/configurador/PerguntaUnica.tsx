@@ -315,20 +315,14 @@ function CampoTexto({ pergunta }: { pergunta: Pergunta }) {
 
 // ─── COMPONENTE PRINCIPAL ─────────────────────────────────────
 export default function PerguntaUnica({ pergunta, totalPerguntas, direcao }: Props) {
-  const { atualizarOpcao, avancarPergunta } = useCadernoStore()
+  const { atualizarOpcao } = useCadernoStore()
 
   function aoSelecionar(valor: string) {
     atualizarOpcao(pergunta.campo as keyof ConfiguracaoCaderno, valor as never)
-    if (pergunta.avancaAutomatico) {
-      setTimeout(() => avancarPergunta(totalPerguntas), 280)
-    }
   }
 
   function aoSelecionarToggle(valor: boolean) {
     atualizarOpcao(pergunta.campo as keyof ConfiguracaoCaderno, valor as never)
-    if (pergunta.avancaAutomatico) {
-      setTimeout(() => avancarPergunta(totalPerguntas), 280)
-    }
   }
 
   return (

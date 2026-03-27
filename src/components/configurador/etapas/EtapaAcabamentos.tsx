@@ -21,9 +21,8 @@ const opcoesLaminacao: { valor: TipoLaminacao; label: string; descricao: string 
 ]
 
 const opcoesTextura: { valor: TipoTextura; label: string; descricao: string }[] = [
-  { valor: 'lisa', label: 'Lisa', descricao: 'Superfície suave uniforme' },
+  { valor: 'lisa',      label: 'Lisa',      descricao: 'Superfície suave uniforme' },
   { valor: 'granulada', label: 'Granulada', descricao: 'Textura sutil ao toque' },
-  { valor: 'macia', label: 'Macia', descricao: 'Soft touch, luxuoso' },
 ]
 
 export default function EtapaAcabamentos() {
@@ -123,24 +122,27 @@ export default function EtapaAcabamentos() {
         </div>
       </div>
 
-      {/* Laminação */}
-      <div>
-        <h3 className="text-sm font-medium text-marrom-400 mb-3">Laminação da capa</h3>
-        <div className="flex flex-col gap-2">
-          {opcoesLaminacao.map((opcao) => (
-            <button
-              key={opcao.valor}
-              onClick={() => atualizarOpcao('tipoLaminacao', opcao.valor)}
-              className={`cartao-opcao text-left transition-all duration-200 ${
-                configuracao.tipoLaminacao === opcao.valor ? 'cartao-opcao-selecionado' : ''
-              }`}
-            >
-              <span className="block text-sm font-medium text-marrom-500">{opcao.label}</span>
-              <span className="block text-xs text-marrom-300 mt-0.5">{opcao.descricao}</span>
-            </button>
-          ))}
+      {/* Laminação — só para capa em papel especial */}
+      {configuracao.materialCapa === 'papel-especial' && (
+        <div>
+          <h3 className="text-sm font-medium text-marrom-400 mb-1">Laminação da capa</h3>
+          <p className="text-xs text-marrom-200 mb-3">Disponível para capa em papel especial</p>
+          <div className="flex flex-col gap-2">
+            {opcoesLaminacao.map((opcao) => (
+              <button
+                key={opcao.valor}
+                onClick={() => atualizarOpcao('tipoLaminacao', opcao.valor)}
+                className={`cartao-opcao text-left transition-all duration-200 ${
+                  configuracao.tipoLaminacao === opcao.valor ? 'cartao-opcao-selecionado' : ''
+                }`}
+              >
+                <span className="block text-sm font-medium text-marrom-500">{opcao.label}</span>
+                <span className="block text-xs text-marrom-300 mt-0.5">{opcao.descricao}</span>
+              </button>
+            ))}
+          </div>
         </div>
-      </div>
+      )}
 
       {/* Textura ao toque */}
       <div>

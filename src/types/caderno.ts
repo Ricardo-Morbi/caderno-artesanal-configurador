@@ -33,6 +33,8 @@ export type GravacaoCapa =
   | 'alto-relevo'
   | 'bordado'
 
+export type TipoTipografia = 'serif' | 'sans-serif' | 'script' | 'monoespaco'
+
 export type PosicaoGravacao =
   | 'centro'
   | 'terco-superior'
@@ -49,9 +51,9 @@ export type AplicacaoCapa =
 
 export type TipoEncadernacao =
   | 'copta'
-  | 'japonesa'
+  | 'francesa-cruzada'
   | 'long-stitch'
-  | 'espiral'
+  | 'wire-o'
 
 export type TipoLombada = 'exposta' | 'protegida'
 
@@ -79,6 +81,8 @@ export type PadraoPaginas =
 
 export type TipoMarcador = 'fitilho' | 'couro' | 'cordao'
 
+export type LarguraMarcador = 'fino' | 'medio' | 'largo'
+
 export type PosicaoElastico = 'horizontal' | 'vertical'
 
 // --- ETAPA 6: Acabamentos ---
@@ -89,7 +93,22 @@ export type TipoCorteEspecial = 'nenhum' | 'deckle-edge'
 
 export type TipoLaminacao = 'nenhuma' | 'fosca' | 'brilho'
 
-export type TipoTextura = 'lisa' | 'granulada' | 'macia'
+export type TipoTextura = 'lisa' | 'granulada'
+
+// --- ETAPA 8: Guarda ---
+
+export type MaterialGuarda =
+  | 'branca'
+  | 'colorida'
+  | 'marmorizada'
+  | 'kraft'
+  | 'estampada'
+
+export type PadraoGuarda =
+  | 'liso'
+  | 'floral'
+  | 'geometrico'
+  | 'aquarela'
 
 // --- ETAPA 7: Extras Afetivos ---
 
@@ -123,6 +142,8 @@ export interface ConfiguracaoCaderno {
   estampaCapa: EstampaCapa
   gravacaoCapa: GravacaoCapa
   nomeGravado: string       // texto livre para gravação
+  tipoTipografia: TipoTipografia
+  corBordado: string        // hex — cor do fio de bordado
   posicaoGravacao: PosicaoGravacao
   aplicacoesCapa: AplicacaoCapa[]
 
@@ -146,6 +167,7 @@ export interface ConfiguracaoCaderno {
   posicaoElastico: PosicaoElastico
   marcadorAtivo: boolean
   tipoMarcador: TipoMarcador
+  larguraMarcador: LarguraMarcador
   corMarcador: string       // hex color
   bolsoInterno: boolean
   envelopeAcoplado: boolean
@@ -167,6 +189,11 @@ export interface ConfiguracaoCaderno {
   temaCaderno: TemaCaderno
   essenciaNoParapel: boolean
   proposicaoCaderno: ProposicaoCaderno
+
+  // Etapa 8 — Guarda
+  materialGuarda: MaterialGuarda
+  corGuarda: string
+  padraoGuarda: PadraoGuarda
 }
 
 // ============================================================
@@ -222,6 +249,12 @@ export const ETAPAS: DefinicaoEtapa[] = [
     titulo: 'Extras Afetivos',
     descricao: 'Dedicatória, frases, tema e propósito',
     icone: '💛',
+  },
+  {
+    numero: 8,
+    titulo: 'Guarda',
+    descricao: 'Papel de guarda — folha decorativa interna',
+    icone: '🎨',
   },
 ]
 

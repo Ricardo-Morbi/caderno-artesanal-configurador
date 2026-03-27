@@ -1,4 +1,4 @@
-import type { ConfiguracaoCaderno } from '@/types/caderno'
+import type { ConfiguracaoCaderno, MaterialGuarda, PadraoGuarda } from '@/types/caderno'
 import { CORES_CAPA_PADRAO, CORES_FIO_PADRAO, CORES_ELASTICO_PADRAO } from '@/types/caderno'
 
 // ============================================================
@@ -196,22 +196,6 @@ export const TODAS_PERGUNTAS: Pergunta[] = [
   // ─── GRUPO 3: Encadernação ────────────────────────────────
 
   {
-    id: 'tipoEncadernacao',
-    grupo: 3,
-    titulo: 'Qual tipo de costura?',
-    descricao: 'Define como as páginas são presas',
-    tipo: 'selecao-lista',
-    campo: 'tipoEncadernacao',
-    avancaAutomatico: true,
-    opcoes: [
-      { valor: 'copta',       label: 'Copta',       descricao: 'Costura tradicional — muito resistente e durável' },
-      { valor: 'japonesa',    label: 'Japonesa',    descricao: 'Costura pela lateral — delicada e elegante' },
-      { valor: 'long-stitch', label: 'Long Stitch', descricao: 'Costura longa aparente — visual artístico' },
-      { valor: 'espiral',     label: 'Espiral',     descricao: 'Abre 360° — ideal para planners e esboços' },
-    ],
-  },
-
-  {
     id: 'tipoLombada',
     grupo: 3,
     titulo: 'Como quer a lombada?',
@@ -220,8 +204,25 @@ export const TODAS_PERGUNTAS: Pergunta[] = [
     campo: 'tipoLombada',
     avancaAutomatico: true,
     opcoes: [
-      { valor: 'exposta',    label: 'Exposta',    descricao: 'Costura visível — visual artesanal autêntico' },
-      { valor: 'protegida',  label: 'Protegida',  descricao: 'Capa cobre a costura — mais clean' },
+      { valor: 'exposta',   label: 'Exposta',   descricao: 'Costura visível — visual artesanal autêntico' },
+      { valor: 'protegida', label: 'Protegida', descricao: 'Capa cobre a costura — mais clean' },
+    ],
+  },
+
+  {
+    id: 'tipoEncadernacao',
+    grupo: 3,
+    titulo: 'Qual tipo de costura?',
+    descricao: 'Define como as páginas são presas',
+    tipo: 'selecao-lista',
+    campo: 'tipoEncadernacao',
+    avancaAutomatico: true,
+    visivel: (c) => c.tipoLombada === 'exposta',
+    opcoes: [
+      { valor: 'copta',            label: 'Copta',             descricao: 'Costura tradicional — muito resistente e durável' },
+      { valor: 'long-stitch',      label: 'Long Stitch',       descricao: 'Costura longa aparente — visual artístico e moderno' },
+      { valor: 'francesa-cruzada', label: 'Francesa Cruzada',  descricao: 'Padrão de losangos — delicada e elegante' },
+      { valor: 'wire-o',           label: 'Wire-O',            descricao: 'Anéis metálicos duplos — abre 360°, ideal para planners' },
     ],
   },
 
@@ -233,6 +234,7 @@ export const TODAS_PERGUNTAS: Pergunta[] = [
     tipo: 'selecao-grade',
     campo: 'tipoAbertura',
     avancaAutomatico: true,
+    visivel: (c) => c.tipoLombada === 'exposta',
     opcoes: [
       { valor: '180-graus',   label: 'Abertura 180°', descricao: 'Abre completamente plano — escrever fica fácil' },
       { valor: 'tradicional', label: 'Tradicional',   descricao: 'Abertura padrão — mais compacto' },
@@ -246,6 +248,7 @@ export const TODAS_PERGUNTAS: Pergunta[] = [
     descricao: 'Cor da linha de costura visível na lombada',
     tipo: 'cor',
     campo: 'corFio',
+    visivel: (c) => c.tipoLombada === 'exposta',
     opcoes: CORES_FIO_PADRAO.map((c) => ({ valor: c.hex, label: c.nome, hex: c.hex })),
   },
 
@@ -472,9 +475,11 @@ export const TODAS_PERGUNTAS: Pergunta[] = [
     id: 'tipoLaminacao',
     grupo: 6,
     titulo: 'Qual a laminação da capa?',
+    descricao: 'Disponível apenas para capa em papel especial',
     tipo: 'selecao-lista',
     campo: 'tipoLaminacao',
     avancaAutomatico: true,
+    visivel: (c) => c.materialCapa === 'papel-especial',
     opcoes: [
       { valor: 'nenhuma', label: 'Sem laminação',    descricao: 'Toque natural do material' },
       { valor: 'fosca',   label: 'Laminação fosca',  descricao: 'Aveludado · Elegante · Premium' },
@@ -492,7 +497,6 @@ export const TODAS_PERGUNTAS: Pergunta[] = [
     opcoes: [
       { valor: 'lisa',      label: 'Lisa',      descricao: 'Superfície suave e uniforme' },
       { valor: 'granulada', label: 'Granulada', descricao: 'Textura sutil sob os dedos' },
-      { valor: 'macia',     label: 'Macia',     descricao: 'Soft touch · Luxuoso · Aveludado' },
     ],
   },
 
@@ -546,6 +550,62 @@ export const TODAS_PERGUNTAS: Pergunta[] = [
       { valor: 'essenciaNoParapel',  label: 'Essência no papel',     descricao: 'Aroma sutil e especial nas páginas' },
     ],
   },
+
+  // ─── GRUPO 8: Guarda ──────────────────────────────────────
+
+  {
+    id: 'materialGuarda',
+    grupo: 8,
+    titulo: 'Qual o material da guarda?',
+    descricao: 'A folha decorativa no início e fim do caderno',
+    tipo: 'selecao-grade',
+    campo: 'materialGuarda',
+    avancaAutomatico: true,
+    opcoes: [
+      { valor: 'branca',      label: 'Branca',      descricao: 'Clássica · Neutra · Elegante' },
+      { valor: 'colorida',    label: 'Colorida',    descricao: 'Cor sólida personalizada' },
+      { valor: 'marmorizada', label: 'Marmorizada', descricao: 'Efeito mármore · Sofisticado' },
+      { valor: 'kraft',       label: 'Kraft',       descricao: 'Rústica · Natural · Artesanal' },
+      { valor: 'estampada',   label: 'Estampada',   descricao: 'Com padrão impresso' },
+    ],
+  } as Pergunta & { campo: keyof ConfiguracaoCaderno },
+
+  {
+    id: 'corGuarda',
+    grupo: 8,
+    titulo: 'Qual a cor da guarda?',
+    descricao: 'Cor de fundo da guarda',
+    tipo: 'cor',
+    campo: 'corGuarda',
+    visivel: (c) => c.materialGuarda === 'colorida',
+    opcoes: [
+      { valor: '#F5DEB3', label: 'Trigo',         hex: '#F5DEB3' },
+      { valor: '#B5C4B1', label: 'Sálvia',        hex: '#B5C4B1' },
+      { valor: '#D4B8A0', label: 'Terracota claro', hex: '#D4B8A0' },
+      { valor: '#8B9DC3', label: 'Azul cinza',    hex: '#8B9DC3' },
+      { valor: '#C3A8C8', label: 'Lavanda',       hex: '#C3A8C8' },
+      { valor: '#D4AF37', label: 'Dourado',       hex: '#D4AF37' },
+      { valor: '#1A1A1A', label: 'Preto',         hex: '#1A1A1A' },
+      { valor: '#F5F0E0', label: 'Creme',         hex: '#F5F0E0' },
+    ],
+  } as Pergunta & { campo: keyof ConfiguracaoCaderno },
+
+  {
+    id: 'padraoGuarda',
+    grupo: 8,
+    titulo: 'Qual o padrão da guarda?',
+    descricao: 'Estampa impressa na folha de guarda',
+    tipo: 'selecao-grade',
+    campo: 'padraoGuarda',
+    avancaAutomatico: true,
+    visivel: (c) => c.materialGuarda === 'estampada',
+    opcoes: [
+      { valor: 'liso',       label: 'Liso',       descricao: 'Cor uniforme, sem padrão' },
+      { valor: 'floral',     label: 'Floral',     descricao: 'Flores delicadas e botânicos' },
+      { valor: 'geometrico', label: 'Geométrico', descricao: 'Formas e linhas precisas' },
+      { valor: 'aquarela',   label: 'Aquarela',   descricao: 'Pinceladas suaves de tinta' },
+    ],
+  } as Pergunta & { campo: keyof ConfiguracaoCaderno },
 ]
 
 // ─── Utilitários ─────────────────────────────────────────────
@@ -562,4 +622,5 @@ export const GRUPOS = [
   { numero: 5, titulo: 'Funcionais',   iconeKey: 'elastico' },
   { numero: 6, titulo: 'Acabamentos',  iconeKey: 'cantos' },
   { numero: 7, titulo: 'Extras',       iconeKey: 'coracao' },
+  { numero: 8, titulo: 'Guarda',       iconeKey: 'guarda' },
 ]

@@ -2,7 +2,26 @@
 
 import { useCadernoStore } from '@/store/useCadernoStore'
 import { CORES_CAPA_PADRAO } from '@/types/caderno'
-import type { MaterialCapa, EstampaCapa, GravacaoCapa, AplicacaoCapa } from '@/types/caderno'
+import type { MaterialCapa, EstampaCapa, GravacaoCapa, AplicacaoCapa, TipoTipografia } from '@/types/caderno'
+
+const CORES_BORDADO = [
+  { nome: 'Dourado', hex: '#F5DFA0' },
+  { nome: 'Prata', hex: '#D4D4D4' },
+  { nome: 'Branco', hex: '#F8F8F8' },
+  { nome: 'Vermelho', hex: '#C0392B' },
+  { nome: 'Terracota', hex: '#C4713C' },
+  { nome: 'Azul', hex: '#2980B9' },
+  { nome: 'Verde', hex: '#27AE60' },
+  { nome: 'Rosa', hex: '#E91E8C' },
+  { nome: 'Preto', hex: '#1A1A1A' },
+]
+
+const opcoesTipografia: { valor: TipoTipografia; label: string; descricao: string; exemplo: string }[] = [
+  { valor: 'serif',      label: 'Serifada',    descricao: 'Clássica · Elegante',    exemplo: 'Abc' },
+  { valor: 'sans-serif', label: 'Sem serifa',  descricao: 'Moderna · Limpa',        exemplo: 'Abc' },
+  { valor: 'script',     label: 'Script',      descricao: 'Cursiva · Artística',    exemplo: 'Abc' },
+  { valor: 'monoespaco', label: 'Monoespacada', descricao: 'Técnica · Uniforme',   exemplo: 'Abc' },
+]
 
 const opcoesMaterial: { valor: MaterialCapa; label: string; descricao: string }[] = [
   { valor: 'couro', label: 'Couro', descricao: 'Natural, durável' },
@@ -124,25 +143,91 @@ export default function EtapaCapa() {
           ))}
         </div>
 
-        {/* Campo de texto para nome gravado */}
+        {/* Campo de texto + tipografia + cor do bordado */}
         {configuracao.gravacaoCapa !== 'nenhuma' && (
-          <div className="mt-2">
-            <label className="block text-xs text-marrom-400 mb-1">
-              Nome, iniciais ou frase para gravar:
-            </label>
-            <input
-              type="text"
-              value={configuracao.nomeGravado}
-              onChange={(e) => atualizarOpcao('nomeGravado', e.target.value)}
-              placeholder="Ex: Ana Carolina · AC · carpe diem"
-              maxLength={40}
-              className="w-full border border-creme-300 rounded-lg px-3 py-2 text-sm text-marrom-500
-                         placeholder:text-marrom-200 focus:outline-none focus:border-terracota-300
-                         bg-white transition-colors duration-200"
-            />
-            <p className="text-xs text-marrom-200 mt-1 text-right">
-              {configuracao.nomeGravado.length}/40
-            </p>
+          <div className="mt-2 flex flex-col gap-4">
+            {/* 1. Texto a gravar */}
+            <div>
+              <label htmlFor="nome-gravado" className="block text-xs text-marrom-400 mb-1">
+                O que você quer gravar?
+              </label>
+              <input
+                id="nome-gravado"
+                type="text"
+                value={configuracao.nomeGravado}
+                onChange={(e) => atualizarOpcao('nomeGravado', e.target.value)}
+                placeholder="Ex: Ana Carolina · AC · carpe diem"
+                maxLength={40}
+                className="w-full border border-creme-300 rounded-lg px-3 py-2 text-sm text-marrom-500
+                           placeholder:text-marrom-200 focus:outline-none focus:border-terracota-300
+                           bg-white transition-colors duration-200"
+              />
+              <p className="text-xs text-marrom-200 mt-1 text-right">
+                {configuracao.nomeGravado.length}/40
+              </p>
+            </div>
+
+            {/* 2. Tipografia */}
+            <div>
+              <p className="text-xs text-marrom-400 mb-2">Estilo de tipografia</p>
+              <div className="grid grid-cols-2 gap-2">
+                {opcoesTipografia.map((opcao) => (
+                  <button
+                    key={opcao.valor}
+                    onClick={() => atualizarOpcao('tipoTipografia', opcao.valor)}
+                    className={`cartao-opcao text-left transition-all duration-200 ${
+                      configuracao.tipoTipografia === opcao.valor ? 'cartao-opcao-selecionado' : ''
+                    }`}
+                  >
+                    <span
+                      className="block text-base font-medium text-marrom-500 mb-0.5"
+                      style={{
+                        fontFamily: opcao.valor === 'serif' ? 'Georgia, serif'
+                          : opcao.valor === 'sans-serif' ? 'system-ui, sans-serif'
+                          : opcao.valor === 'script' ? 'cursive'
+                          : 'monospace',
+                      }}
+                    >
+                      {opcao.exemplo}
+                    </span>
+                    <span className="block text-xs font-medium text-marrom-500">{opcao.label}</span>
+                    <span className="block text-xs text-marrom-300">{opcao.descricao}</span>
+                  </button>
+                ))}
+              </div>
+            </div>
+
+            {/* 3. Cor do bordado — só quando bordado selecionado */}
+            {configuracao.gravacaoCapa === 'bordado' && (
+              <div>
+                <p className="text-xs text-marrom-400 mb-2">Cor do fio de bordado</p>
+                <div className="flex flex-wrap gap-2 mb-2">
+                  {CORES_BORDADO.map((cor) => (
+                    <button
+                      key={cor.hex}
+                      title={cor.nome}
+                      onClick={() => atualizarOpcao('corBordado', cor.hex)}
+                      className={`seletor-cor ${configuracao.corBordado === cor.hex ? 'seletor-cor-selecionado' : ''}`}
+                      style={{
+                        backgroundColor: cor.hex,
+                        border: cor.hex === '#F8F8F8' ? '2px solid #E8D5B7' : undefined,
+                      }}
+                    />
+                  ))}
+                </div>
+                <div className="flex items-center gap-2">
+                  <label htmlFor="cor-bordado-custom" className="text-xs text-marrom-300">Personalizada:</label>
+                  <input
+                    id="cor-bordado-custom"
+                    type="color"
+                    value={configuracao.corBordado}
+                    onChange={(e) => atualizarOpcao('corBordado', e.target.value)}
+                    className="w-7 h-7 rounded cursor-pointer border border-creme-300"
+                  />
+                  <span className="text-xs font-mono text-marrom-300">{configuracao.corBordado}</span>
+                </div>
+              </div>
+            )}
           </div>
         )}
       </div>

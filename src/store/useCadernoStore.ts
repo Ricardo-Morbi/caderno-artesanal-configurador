@@ -17,6 +17,8 @@ const configuracaoPadrao: ConfiguracaoCaderno = {
   estampaCapa: 'nenhuma',
   gravacaoCapa: 'nenhuma',
   nomeGravado: '',
+  tipoTipografia: 'serif',
+  corBordado: '#F5DFA0',
   posicaoGravacao: 'centro',
   aplicacoesCapa: [],
 
@@ -40,6 +42,7 @@ const configuracaoPadrao: ConfiguracaoCaderno = {
   posicaoElastico: 'vertical',
   marcadorAtivo: true,
   tipoMarcador: 'fitilho',
+  larguraMarcador: 'medio',
   corMarcador: '#C4713C',
   bolsoInterno: false,
   envelopeAcoplado: false,
@@ -61,6 +64,11 @@ const configuracaoPadrao: ConfiguracaoCaderno = {
   temaCaderno: 'nenhum',
   essenciaNoParapel: false,
   proposicaoCaderno: 'escrita-livre',
+
+  // Etapa 8
+  materialGuarda: 'branca',
+  corGuarda: '#F5F0E0',
+  padraoGuarda: 'liso',
 }
 
 // ============================================================

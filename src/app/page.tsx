@@ -1,6 +1,6 @@
 'use client'
 
-import { useRef } from 'react'
+import { useRef, useEffect } from 'react'
 import { useCadernoStore } from '@/store/useCadernoStore'
 import { getPerguntasVisiveis, GRUPOS } from '@/data/perguntas'
 import PreviewCaderno from '@/components/configurador/PreviewCaderno'
@@ -25,6 +25,18 @@ const ICONES_GRUPO: Record<string, React.FC<{ tamanho?: number; className?: stri
 export default function PaginaConfigurador() {
   const { configuracao, perguntaIndex, avancarPergunta, voltarPergunta, irParaPergunta } = useCadernoStore()
   const direcaoRef = useRef(1)
+  const previewRef = useRef<HTMLElement>(null)
+  const configAnteriorRef = useRef(configuracao)
+
+  // Auto-scroll ao preview no mobile quando qualquer opção muda
+  useEffect(() => {
+    if (configuracao !== configAnteriorRef.current) {
+      configAnteriorRef.current = configuracao
+      if (typeof window !== 'undefined' && window.innerWidth < 1024 && previewRef.current) {
+        previewRef.current.scrollIntoView({ behavior: 'smooth', block: 'start' })
+      }
+    }
+  }, [configuracao])
 
   const perguntas = getPerguntasVisiveis(configuracao)
   const total = perguntas.length
@@ -184,7 +196,7 @@ export default function PaginaConfigurador() {
           <div className="flex flex-col lg:flex-row flex-1">
 
             {/* PREVIEW — topo no mobile, centro fixo no desktop */}
-            <section className="lg:flex-1 flex items-center justify-center bg-ivoire-200 py-8 px-6 lg:sticky lg:top-[61px] lg:h-[calc(100vh-61px)]">
+            <section ref={previewRef} className="lg:flex-1 flex items-center justify-center bg-ivoire-200 py-8 px-6 lg:sticky lg:top-[61px] lg:h-[calc(100vh-61px)]">
               <PreviewCaderno />
             </section>
 
