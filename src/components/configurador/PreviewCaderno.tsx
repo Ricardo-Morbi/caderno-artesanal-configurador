@@ -460,7 +460,7 @@ function FaceFrente({ W, H, corCapa, materialCapa, estampaCapa,
   pinturaBordasAtiva: boolean; corPinturaBordas: string
   corBordado: string; tipoTipografia: string
 }) {
-  const ehCouro = materialCapa === 'couro' || materialCapa === 'couro-sintetico'
+  const ehCouro = materialCapa === 'couro' || materialCapa === 'sintetico'
   const lum = luminancia(corCapa)
   const veinColor = lum < 0.45 ? 'rgba(255,255,255,0.07)' : 'rgba(0,0,0,0.06)'
 
@@ -492,32 +492,16 @@ function FaceFrente({ W, H, corCapa, materialCapa, estampaCapa,
             <circle cx="4" cy="4" r="0.9" fill={`${corCapa}35`}/>
           </pattern>
         )}
-        {/* Leather grain filter — pebbled Montblanc style */}
+        {/* Leather grain filter */}
         {ehCouro && (
           <filter id="grain-fr" x="-2%" y="-2%" width="104%" height="104%" colorInterpolationFilters="sRGB">
-            {/* Poros pebbled: turbulence cria grãos esféricos distintos */}
-            <feTurbulence type="turbulence" baseFrequency="0.065 0.060" numOctaves="4" seed="5" result="pebbleRaw"/>
-            {/* Gamma boost: vales mais escuros, topos mais brilhantes */}
-            <feComponentTransfer in="pebbleRaw" result="pebble">
-              <feFuncR type="gamma" amplitude="1" exponent="0.55" offset="0"/>
-              <feFuncG type="gamma" amplitude="1" exponent="0.55" offset="0"/>
-              <feFuncB type="gamma" amplitude="1" exponent="0.55" offset="0"/>
-            </feComponentTransfer>
-            {/* Relevo difuso: sombras e profundidade dos grãos */}
-            <feDiffuseLighting in="pebble" lightingColor="white" surfaceScale="5.5" diffuseConstant="0.9" result="diffuse">
-              <feDistantLight azimuth="130" elevation="42"/>
+            <feTurbulence type="fractalNoise" baseFrequency="0.76 0.70" numOctaves="4" seed="5" result="pebble"/>
+            <feDiffuseLighting in="pebble" lightingColor="white" surfaceScale="4.5" diffuseConstant="0.9" result="lit">
+              <feDistantLight azimuth="130" elevation="46"/>
             </feDiffuseLighting>
-            {/* Brilho especular: lustro do couro Montblanc em cada topo de grão */}
-            <feSpecularLighting in="pebble" lightingColor="white" surfaceScale="5.5" specularConstant="0.55" specularExponent="14" result="spec">
-              <feDistantLight azimuth="130" elevation="42"/>
-            </feSpecularLighting>
-            {/* Micro-rugosidade: textura fina da superfície */}
-            <feTurbulence type="fractalNoise" baseFrequency="2.2 2.0" numOctaves="2" seed="13" result="micro"/>
+            <feTurbulence type="fractalNoise" baseFrequency="1.9 1.7" numOctaves="2" seed="13" result="micro"/>
             <feColorMatrix type="saturate" values="0" in="micro" result="microGray"/>
-            {/* Compõe: 70% difuso + 20% especular + 10% micro-rugosidade */}
-            <feComposite in="diffuse" in2="spec" operator="arithmetic" k1="0" k2="0.70" k3="0.20" k4="0" result="lit2"/>
-            <feComposite in="lit2" in2="microGray" operator="arithmetic" k1="0" k2="0.90" k3="0.10" k4="0" result="combined"/>
-            {/* soft-light: preserva cor + adiciona profundidade — funciona em todas as cores */}
+            <feComposite in="lit" in2="microGray" operator="arithmetic" k1="0" k2="0.82" k3="0.18" k4="0" result="combined"/>
             <feBlend in="SourceGraphic" in2="combined" mode="soft-light"/>
           </filter>
         )}
@@ -564,7 +548,7 @@ function FaceFrente({ W, H, corCapa, materialCapa, estampaCapa,
         </g>
       )}
       {/* Couro sintético: losangos regulares */}
-      {materialCapa === 'couro-sintetico' && (
+      {materialCapa === 'sintetico' && (
         <g opacity="0.08">
           {Array.from({ length: Math.ceil(H / 12) }, (_, row) =>
             Array.from({ length: Math.ceil(W / 16) }, (_, col) => {
@@ -664,28 +648,19 @@ function FaceFrente({ W, H, corCapa, materialCapa, estampaCapa,
 function FaceVerso({ W, H, corCapa, materialCapa, raioCanto }: {
   W: number; H: number; corCapa: string; materialCapa: string; raioCanto: number
 }) {
-  const ehCouro = materialCapa === 'couro' || materialCapa === 'couro-sintetico'
+  const ehCouro = materialCapa === 'couro' || materialCapa === 'sintetico'
   return (
     <svg viewBox={`0 0 ${W} ${H}`} width="100%" height="100%" xmlns="http://www.w3.org/2000/svg">
       <defs>
         {ehCouro && (
           <filter id="grain-v" x="-2%" y="-2%" width="104%" height="104%" colorInterpolationFilters="sRGB">
-            <feTurbulence type="turbulence" baseFrequency="0.065 0.060" numOctaves="4" seed="11" result="pebbleRaw"/>
-            <feComponentTransfer in="pebbleRaw" result="pebble">
-              <feFuncR type="gamma" amplitude="1" exponent="0.55" offset="0"/>
-              <feFuncG type="gamma" amplitude="1" exponent="0.55" offset="0"/>
-              <feFuncB type="gamma" amplitude="1" exponent="0.55" offset="0"/>
-            </feComponentTransfer>
-            <feDiffuseLighting in="pebble" lightingColor="white" surfaceScale="5.5" diffuseConstant="0.9" result="diffuse">
-              <feDistantLight azimuth="50" elevation="42"/>
+            <feTurbulence type="fractalNoise" baseFrequency="0.76 0.70" numOctaves="4" seed="11" result="pebble"/>
+            <feDiffuseLighting in="pebble" lightingColor="white" surfaceScale="4.5" diffuseConstant="0.9" result="lit">
+              <feDistantLight azimuth="130" elevation="46"/>
             </feDiffuseLighting>
-            <feSpecularLighting in="pebble" lightingColor="white" surfaceScale="5.5" specularConstant="0.55" specularExponent="14" result="spec">
-              <feDistantLight azimuth="50" elevation="42"/>
-            </feSpecularLighting>
-            <feTurbulence type="fractalNoise" baseFrequency="2.2 2.0" numOctaves="2" seed="17" result="micro"/>
+            <feTurbulence type="fractalNoise" baseFrequency="1.9 1.7" numOctaves="2" seed="17" result="micro"/>
             <feColorMatrix type="saturate" values="0" in="micro" result="microGray"/>
-            <feComposite in="diffuse" in2="spec" operator="arithmetic" k1="0" k2="0.70" k3="0.20" k4="0" result="lit2"/>
-            <feComposite in="lit2" in2="microGray" operator="arithmetic" k1="0" k2="0.90" k3="0.10" k4="0" result="combined"/>
+            <feComposite in="lit" in2="microGray" operator="arithmetic" k1="0" k2="0.82" k3="0.18" k4="0" result="combined"/>
             <feBlend in="SourceGraphic" in2="combined" mode="soft-light"/>
           </filter>
         )}
@@ -741,24 +716,15 @@ function FaceSpine({ W, H, corCapa, materialCapa, tipoEncadernacao, tipoLombada,
             <line x1="4" y1="0" x2="0" y2="4" stroke={`${corCapa}55`} strokeWidth="0.6"/>
           </pattern>
         )}
-        {(materialCapa === 'couro' || materialCapa === 'couro-sintetico') && (
+        {(materialCapa === 'couro' || materialCapa === 'sintetico') && (
           <filter id="grain-sp" x="-2%" y="-2%" width="104%" height="104%" colorInterpolationFilters="sRGB">
-            <feTurbulence type="turbulence" baseFrequency="0.065 0.060" numOctaves="4" seed="19" result="pebbleRaw"/>
-            <feComponentTransfer in="pebbleRaw" result="pebble">
-              <feFuncR type="gamma" amplitude="1" exponent="0.55" offset="0"/>
-              <feFuncG type="gamma" amplitude="1" exponent="0.55" offset="0"/>
-              <feFuncB type="gamma" amplitude="1" exponent="0.55" offset="0"/>
-            </feComponentTransfer>
-            <feDiffuseLighting in="pebble" lightingColor="white" surfaceScale="5.5" diffuseConstant="0.9" result="diffuse">
-              <feDistantLight azimuth="90" elevation="42"/>
+            <feTurbulence type="fractalNoise" baseFrequency="0.76 0.70" numOctaves="4" seed="19" result="pebble"/>
+            <feDiffuseLighting in="pebble" lightingColor="white" surfaceScale="4.5" diffuseConstant="0.9" result="lit">
+              <feDistantLight azimuth="90" elevation="46"/>
             </feDiffuseLighting>
-            <feSpecularLighting in="pebble" lightingColor="white" surfaceScale="5.5" specularConstant="0.55" specularExponent="14" result="spec">
-              <feDistantLight azimuth="90" elevation="42"/>
-            </feSpecularLighting>
-            <feTurbulence type="fractalNoise" baseFrequency="2.2 2.0" numOctaves="2" seed="23" result="micro"/>
+            <feTurbulence type="fractalNoise" baseFrequency="1.9 1.7" numOctaves="2" seed="23" result="micro"/>
             <feColorMatrix type="saturate" values="0" in="micro" result="microGray"/>
-            <feComposite in="diffuse" in2="spec" operator="arithmetic" k1="0" k2="0.70" k3="0.20" k4="0" result="lit2"/>
-            <feComposite in="lit2" in2="microGray" operator="arithmetic" k1="0" k2="0.90" k3="0.10" k4="0" result="combined"/>
+            <feComposite in="lit" in2="microGray" operator="arithmetic" k1="0" k2="0.82" k3="0.18" k4="0" result="combined"/>
             <feBlend in="SourceGraphic" in2="combined" mode="soft-light"/>
           </filter>
         )}
@@ -768,7 +734,7 @@ function FaceSpine({ W, H, corCapa, materialCapa, tipoEncadernacao, tipoLombada,
       {ehProtegida ? (
         <>
           <rect width={W} height={H} fill={corCapa}
-            filter={(materialCapa === 'couro' || materialCapa === 'couro-sintetico') ? 'url(#grain-sp)' : undefined}/>
+            filter={(materialCapa === 'couro' || materialCapa === 'sintetico') ? 'url(#grain-sp)' : undefined}/>
           {materialCapa === 'linho' && <rect width={W} height={H} fill="url(#ls)"/>}
         </>
       ) : (
