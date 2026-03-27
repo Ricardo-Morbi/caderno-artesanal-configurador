@@ -464,6 +464,12 @@ function FaceFrente({ W, H, corCapa, materialCapa, estampaCapa,
   const lum = luminancia(corCapa)
   const veinColor = lum < 0.45 ? 'rgba(255,255,255,0.07)' : 'rgba(0,0,0,0.06)'
 
+  // Ribbon variables (computed here to avoid IIFE inside JSX)
+  const rW = larguraMarcador === 'fino' ? 3.5 : larguraMarcador === 'largo' ? 8.5 : 5.5
+  const rX = W * 0.615
+  const rYstart = H * 0.54   // ribbon emerge da metade inferior — só parte de baixo visível
+  const tipH = 22
+
   return (
     <svg viewBox={`0 0 ${W} ${H}`} width="100%" height="100%" xmlns="http://www.w3.org/2000/svg"
       overflow="visible">
@@ -486,12 +492,33 @@ function FaceFrente({ W, H, corCapa, materialCapa, estampaCapa,
             <circle cx="4" cy="4" r="0.9" fill={`${corCapa}35`}/>
           </pattern>
         )}
-        {/* Leather grain filter */}
+        {/* Leather grain filter — pebbled Montblanc style */}
         {ehCouro && (
           <filter id="grain-fr" x="-2%" y="-2%" width="104%" height="104%" colorInterpolationFilters="sRGB">
-            <feTurbulence type="fractalNoise" baseFrequency="0.62 0.4" numOctaves="4" seed="3" result="g"/>
-            <feColorMatrix type="saturate" values="0" in="g" result="gray"/>
-            <feBlend in="SourceGraphic" in2="gray" mode="soft-light"/>
+            {/* Poros pebbled: turbulence cria grãos esféricos distintos */}
+            <feTurbulence type="turbulence" baseFrequency="0.065 0.060" numOctaves="4" seed="5" result="pebbleRaw"/>
+            {/* Gamma boost: vales mais escuros, topos mais brilhantes */}
+            <feComponentTransfer in="pebbleRaw" result="pebble">
+              <feFuncR type="gamma" amplitude="1" exponent="0.55" offset="0"/>
+              <feFuncG type="gamma" amplitude="1" exponent="0.55" offset="0"/>
+              <feFuncB type="gamma" amplitude="1" exponent="0.55" offset="0"/>
+            </feComponentTransfer>
+            {/* Relevo difuso: sombras e profundidade dos grãos */}
+            <feDiffuseLighting in="pebble" lightingColor="white" surfaceScale="5.5" diffuseConstant="0.9" result="diffuse">
+              <feDistantLight azimuth="130" elevation="42"/>
+            </feDiffuseLighting>
+            {/* Brilho especular: lustro do couro Montblanc em cada topo de grão */}
+            <feSpecularLighting in="pebble" lightingColor="white" surfaceScale="5.5" specularConstant="0.55" specularExponent="14" result="spec">
+              <feDistantLight azimuth="130" elevation="42"/>
+            </feSpecularLighting>
+            {/* Micro-rugosidade: textura fina da superfície */}
+            <feTurbulence type="fractalNoise" baseFrequency="2.2 2.0" numOctaves="2" seed="13" result="micro"/>
+            <feColorMatrix type="saturate" values="0" in="micro" result="microGray"/>
+            {/* Compõe: 70% difuso + 20% especular + 10% micro-rugosidade */}
+            <feComposite in="diffuse" in2="spec" operator="arithmetic" k1="0" k2="0.70" k3="0.20" k4="0" result="lit2"/>
+            <feComposite in="lit2" in2="microGray" operator="arithmetic" k1="0" k2="0.90" k3="0.10" k4="0" result="combined"/>
+            {/* soft-light: preserva cor + adiciona profundidade — funciona em todas as cores */}
+            <feBlend in="SourceGraphic" in2="combined" mode="soft-light"/>
           </filter>
         )}
         {/* Lighting - radial from upper left */}
@@ -508,6 +535,11 @@ function FaceFrente({ W, H, corCapa, materialCapa, estampaCapa,
         <linearGradient id="htop-fr" x1="0" y1="0" x2="0" y2="1">
           <stop offset="0%"  stopColor="white" stopOpacity="0.3"/>
           <stop offset="12%" stopColor="white" stopOpacity="0.0"/>
+        </linearGradient>
+        {/* Ribbon fade-in: simula emerge entre as páginas */}
+        <linearGradient id="ribbon-entry-fr" x1="0" y1="0" x2="0" y2="1">
+          <stop offset="0%"  stopColor={corCapa} stopOpacity="0.85"/>
+          <stop offset="100%" stopColor={corCapa} stopOpacity="0"/>
         </linearGradient>
       </defs>
 
@@ -574,32 +606,29 @@ function FaceFrente({ W, H, corCapa, materialCapa, estampaCapa,
           fill={corElastico}/>
       )}
 
-      {/* Marcador — ribbon entre as páginas, ponta saindo embaixo */}
-      {marcadorAtivo && (() => {
-        const rW = larguraMarcador === 'fino' ? 3.5 : larguraMarcador === 'largo' ? 8.5 : 5.5
-        const rX = W * 0.615
-        const rYstart = H * 0.38   // ribbon "entra" no caderno aqui — topo visível
-        const tipH = 24
-        return (
-          <g>
-            {/* Sombra (à direita do ribbon) */}
-            <rect x={rX + rW + 0.5} y={rYstart} width={rW * 0.55} height={H - rYstart + tipH}
-              fill="rgba(0,0,0,0.18)" rx={0.8}/>
-            {/* Corpo do ribbon */}
-            <rect x={rX} y={rYstart} width={rW} height={H - rYstart} fill={corMarcador} rx={1}/>
-            {/* Ponta triangular (V-cut) */}
-            <polygon
-              points={`${rX},${H} ${rX + rW},${H} ${rX + rW/2},${H + tipH}`}
-              fill={corMarcador}/>
-            {/* Brilho longitudinal */}
-            <rect x={rX + rW * 0.15} y={rYstart} width={rW * 0.22} height={H - rYstart}
-              fill="rgba(255,255,255,0.28)" rx={0.5}/>
-            {/* Marca de entrada — linha horizontal onde o ribbon "desaparece" no livro */}
-            <rect x={rX - 1} y={rYstart - 1} width={rW + 2} height={2.5}
-              fill="rgba(0,0,0,0.28)" rx={0.5}/>
-          </g>
-        )
-      })()}
+      {/* Marcador — ribbon emerge da metade inferior, ponta saindo embaixo */}
+      {marcadorAtivo && (
+        <g>
+          {/* Sombra lateral direita */}
+          <rect x={rX + rW + 0.5} y={rYstart} width={rW * 0.55} height={H - rYstart + tipH}
+            fill="rgba(0,0,0,0.18)" rx={0.8}/>
+          {/* Corpo do ribbon */}
+          <rect x={rX} y={rYstart} width={rW} height={H - rYstart} fill={corMarcador} rx={1}/>
+          {/* Ponta triangular (V-cut) */}
+          <polygon
+            points={`${rX},${H} ${rX + rW},${H} ${rX + rW/2},${H + tipH}`}
+            fill={corMarcador}/>
+          {/* Brilho longitudinal */}
+          <rect x={rX + rW * 0.15} y={rYstart} width={rW * 0.22} height={H - rYstart}
+            fill="rgba(255,255,255,0.28)" rx={0.5}/>
+          {/* Fade-in no topo: simula ribbon saindo de entre as páginas */}
+          <rect x={rX - 0.5} y={rYstart} width={rW + 1} height={16}
+            fill="url(#ribbon-entry-fr)" rx={1}/>
+          {/* Sombra de entrada — slot entre páginas e capa */}
+          <rect x={rX - 2} y={rYstart - 1.5} width={rW + 4} height={3}
+            fill="rgba(0,0,0,0.45)" rx={0.8}/>
+        </g>
+      )}
 
       {/* Pintura nas bordas */}
       {pinturaBordasAtiva && (
@@ -641,9 +670,23 @@ function FaceVerso({ W, H, corCapa, materialCapa, raioCanto }: {
       <defs>
         {ehCouro && (
           <filter id="grain-v" x="-2%" y="-2%" width="104%" height="104%" colorInterpolationFilters="sRGB">
-            <feTurbulence type="fractalNoise" baseFrequency="0.62 0.4" numOctaves="4" seed="7" result="g"/>
-            <feColorMatrix type="saturate" values="0" in="g" result="gray"/>
-            <feBlend in="SourceGraphic" in2="gray" mode="soft-light"/>
+            <feTurbulence type="turbulence" baseFrequency="0.065 0.060" numOctaves="4" seed="11" result="pebbleRaw"/>
+            <feComponentTransfer in="pebbleRaw" result="pebble">
+              <feFuncR type="gamma" amplitude="1" exponent="0.55" offset="0"/>
+              <feFuncG type="gamma" amplitude="1" exponent="0.55" offset="0"/>
+              <feFuncB type="gamma" amplitude="1" exponent="0.55" offset="0"/>
+            </feComponentTransfer>
+            <feDiffuseLighting in="pebble" lightingColor="white" surfaceScale="5.5" diffuseConstant="0.9" result="diffuse">
+              <feDistantLight azimuth="50" elevation="42"/>
+            </feDiffuseLighting>
+            <feSpecularLighting in="pebble" lightingColor="white" surfaceScale="5.5" specularConstant="0.55" specularExponent="14" result="spec">
+              <feDistantLight azimuth="50" elevation="42"/>
+            </feSpecularLighting>
+            <feTurbulence type="fractalNoise" baseFrequency="2.2 2.0" numOctaves="2" seed="17" result="micro"/>
+            <feColorMatrix type="saturate" values="0" in="micro" result="microGray"/>
+            <feComposite in="diffuse" in2="spec" operator="arithmetic" k1="0" k2="0.70" k3="0.20" k4="0" result="lit2"/>
+            <feComposite in="lit2" in2="microGray" operator="arithmetic" k1="0" k2="0.90" k3="0.10" k4="0" result="combined"/>
+            <feBlend in="SourceGraphic" in2="combined" mode="soft-light"/>
           </filter>
         )}
         <radialGradient id="luz-v" cx="72%" cy="18%" r="88%" gradientUnits="objectBoundingBox">
@@ -698,12 +741,34 @@ function FaceSpine({ W, H, corCapa, materialCapa, tipoEncadernacao, tipoLombada,
             <line x1="4" y1="0" x2="0" y2="4" stroke={`${corCapa}55`} strokeWidth="0.6"/>
           </pattern>
         )}
+        {(materialCapa === 'couro' || materialCapa === 'couro-sintetico') && (
+          <filter id="grain-sp" x="-2%" y="-2%" width="104%" height="104%" colorInterpolationFilters="sRGB">
+            <feTurbulence type="turbulence" baseFrequency="0.065 0.060" numOctaves="4" seed="19" result="pebbleRaw"/>
+            <feComponentTransfer in="pebbleRaw" result="pebble">
+              <feFuncR type="gamma" amplitude="1" exponent="0.55" offset="0"/>
+              <feFuncG type="gamma" amplitude="1" exponent="0.55" offset="0"/>
+              <feFuncB type="gamma" amplitude="1" exponent="0.55" offset="0"/>
+            </feComponentTransfer>
+            <feDiffuseLighting in="pebble" lightingColor="white" surfaceScale="5.5" diffuseConstant="0.9" result="diffuse">
+              <feDistantLight azimuth="90" elevation="42"/>
+            </feDiffuseLighting>
+            <feSpecularLighting in="pebble" lightingColor="white" surfaceScale="5.5" specularConstant="0.55" specularExponent="14" result="spec">
+              <feDistantLight azimuth="90" elevation="42"/>
+            </feSpecularLighting>
+            <feTurbulence type="fractalNoise" baseFrequency="2.2 2.0" numOctaves="2" seed="23" result="micro"/>
+            <feColorMatrix type="saturate" values="0" in="micro" result="microGray"/>
+            <feComposite in="diffuse" in2="spec" operator="arithmetic" k1="0" k2="0.70" k3="0.20" k4="0" result="lit2"/>
+            <feComposite in="lit2" in2="microGray" operator="arithmetic" k1="0" k2="0.90" k3="0.10" k4="0" result="combined"/>
+            <feBlend in="SourceGraphic" in2="combined" mode="soft-light"/>
+          </filter>
+        )}
       </defs>
 
       {/* Fundo — miolo exposto (pilha de páginas) ou lombada protegida */}
       {ehProtegida ? (
         <>
-          <rect width={W} height={H} fill={corCapa}/>
+          <rect width={W} height={H} fill={corCapa}
+            filter={(materialCapa === 'couro' || materialCapa === 'couro-sintetico') ? 'url(#grain-sp)' : undefined}/>
           {materialCapa === 'linho' && <rect width={W} height={H} fill="url(#ls)"/>}
         </>
       ) : (
