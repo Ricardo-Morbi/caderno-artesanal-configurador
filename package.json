@@ -15,6 +15,12 @@
     "react-dom": "^19.0.0",
     "zustand": "^5.0.3"
   },
+  "browserslist": [
+    "> 0.5% and supports es6-module",
+    "last 2 versions",
+    "not dead",
+    "not ie 11"
+  ],
   "devDependencies": {
     "@types/node": "^20",
     "@types/react": "^19",

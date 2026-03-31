@@ -132,8 +132,8 @@ function TotalPedido({ valor }: { valor: number }) {
     <div className="px-6 py-4 border-t border-ivoire-300 bg-ivoire-50">
       <div className="flex items-center justify-between">
         <div>
-          <p className="text-xs text-onix-300 tracking-widest uppercase font-sans">Total estimado</p>
-          <p className="text-xs text-onix-200 font-sans mt-0.5">Valores finais confirmados no pedido</p>
+          <p className="text-xs text-onix-500 tracking-widest uppercase font-sans">Total estimado</p>
+          <p className="text-xs text-onix-400 font-sans mt-0.5">Valores finais confirmados no pedido</p>
         </div>
         <div className="text-right">
           <p className="text-xl font-serif text-onix-700 tracking-tight">
@@ -243,7 +243,7 @@ export default function PaginaConfigurador() {
 
           {/* Logo */}
           <div>
-            <p className="text-xs tracking-widest text-onix-300 uppercase font-sans mb-0.5">Ateliê</p>
+            <p className="text-xs tracking-widest text-onix-500 uppercase font-sans mb-0.5">Ateliê</p>
             <h1 className="text-base font-serif text-onix-700 leading-tight tracking-tight">
               Caderno Artesanal
             </h1>
@@ -251,8 +251,8 @@ export default function PaginaConfigurador() {
 
           {/* Contador central */}
           <div className="text-center">
-            <p className="text-xs text-onix-300 tracking-widest uppercase">
-              {perguntaIndex + 1} <span className="text-onix-200">de</span> {total}
+            <p className="text-xs text-onix-500 tracking-widest uppercase">
+              {perguntaIndex + 1} <span className="text-onix-400">de</span> {total}
             </p>
           </div>
         </div>
@@ -280,6 +280,7 @@ export default function PaginaConfigurador() {
             return (
               <button
                 key={grupo.numero}
+                aria-label={grupo.titulo}
                 onClick={() => {
                   direcaoRef.current = grupo.numero > grupoAtual ? 1 : -1
                   irParaPergunta(primeiroIndex)
@@ -298,7 +299,7 @@ export default function PaginaConfigurador() {
       </div>
 
       {/* ── LAYOUT PRINCIPAL ── */}
-      <div className="flex flex-1 max-w-screen-xl mx-auto w-full">
+      <main className="flex flex-1 max-w-screen-xl mx-auto w-full">
 
         {/* SIDEBAR — desktop */}
         <aside className="hidden lg:flex flex-col w-52 xl:w-60 flex-shrink-0 border-r border-ivoire-400 bg-white sticky top-[94px] h-[calc(100vh-94px)] overflow-y-auto py-8 px-4">
@@ -339,7 +340,7 @@ export default function PaginaConfigurador() {
           })}
 
           <div className="mt-auto px-2 pt-6 border-t border-ivoire-400">
-            <p className="text-xs text-onix-300 text-center tracking-widest">
+            <p className="text-xs text-onix-500 text-center tracking-widest">
               {perguntaIndex + 1} / {total}
             </p>
           </div>
@@ -366,7 +367,7 @@ export default function PaginaConfigurador() {
                 <span className="label-categoria">
                   {GRUPOS.find(g => g.numero === grupoAtual)?.titulo}
                 </span>
-                <span className="text-xs font-mono text-onix-300">
+                <span className="text-xs font-mono text-onix-500">
                   {perguntaIndex + 1} / {total}
                 </span>
               </div>
@@ -419,14 +420,14 @@ export default function PaginaConfigurador() {
             </aside>
           </div>
         </div>
-      </div>
+      </main>
 
       {/* ── BARRA FIXA INFERIOR — mobile ── */}
       <nav className="lg:hidden fixed bottom-0 left-0 right-0 z-40 bg-white/98 backdrop-blur-sm border-t border-ivoire-400 safe-bottom">
 
         {/* Total mobile */}
         <div className="flex items-center justify-between px-5 pt-3 pb-1">
-          <span className="text-xs text-onix-300 tracking-widest uppercase font-sans">Total</span>
+          <span className="text-xs text-onix-500 tracking-widest uppercase font-sans">Total</span>
           <span className="text-base font-serif text-onix-700">
             R$ {totalValor.toFixed(2).replace('.', ',')}
           </span>
@@ -436,10 +437,10 @@ export default function PaginaConfigurador() {
           {/* Mini progresso */}
           <div className="flex-1 min-w-0">
             <div className="flex justify-between items-center mb-1.5">
-              <span className="text-xs text-onix-300 tracking-wide truncate">
+              <span className="text-xs text-onix-500 tracking-wide truncate">
                 {GRUPOS.find(g => g.numero === grupoAtual)?.titulo}
               </span>
-              <span className="text-xs font-mono text-onix-300 flex-shrink-0 ml-2">
+              <span className="text-xs font-mono text-onix-500 flex-shrink-0 ml-2">
                 {perguntaIndex + 1}/{total}
               </span>
             </div>
@@ -455,6 +456,7 @@ export default function PaginaConfigurador() {
           <button
             onClick={voltar}
             disabled={perguntaIndex === 0}
+            aria-label="Voltar pergunta"
             className="
               w-10 h-10 border border-ivoire-400 flex items-center justify-center
               text-onix-400 disabled:opacity-20 hover:border-onix-300
@@ -467,6 +469,7 @@ export default function PaginaConfigurador() {
           {/* Botão próximo */}
           <button
             onClick={eUltima ? abrirModal : avancar}
+            aria-label={eUltima ? 'Finalizar pedido' : 'Próxima pergunta'}
             className="
               flex items-center gap-2
               bg-onix-700 hover:bg-onix-800 text-ivoire-100
