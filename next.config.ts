@@ -59,6 +59,25 @@ const nextConfig: NextConfig = {
     remotePatterns: [],
   },
 
+  experimental: {
+    // Substitui <link rel="stylesheet"> por <style> inline no <head>.
+    // Elimina o waterfall de CSS render-blocking no App Router (streaming RSC).
+    // Nota: visitantes recorrentes re-baixam o CSS (sem cache de arquivo separado).
+    inlineCss: true,
+  },
+
+  webpack(config) {
+    // O Next.js injeta next-polyfill-module incondicionalmente, mesmo com
+    // browserslist moderno. Este alias aponta o módulo para false (noop),
+    // eliminando os 12 KiB de polyfills desnecessários para browsers modernos.
+    // Seguro para o público-alvo: Chrome 111+, Edge 111+, Firefox 111+, Safari 16.4+
+    config.resolve.alias = {
+      ...config.resolve.alias,
+      'next/dist/build/polyfills/polyfill-module': false,
+    }
+    return config
+  },
+
   async headers() {
     return [
       {

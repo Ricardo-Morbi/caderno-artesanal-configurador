@@ -1,7 +1,9 @@
 'use client'
 
 import { useState, useRef } from 'react'
-import { motion, AnimatePresence } from 'framer-motion'
+import { LazyMotion, m as motion, AnimatePresence } from 'framer-motion'
+
+const loadFeatures = () => import('@/lib/motion-features').then(r => r.default)
 import { useCadernoStore } from '@/store/useCadernoStore'
 
 type Modo = 'fechado' | 'aberto'
@@ -1390,11 +1392,12 @@ export default function PreviewCaderno() {
   }
 
   return (
+    <LazyMotion features={loadFeatures}>
     <div className="flex flex-col items-center gap-4 w-full select-none">
 
       {/* Rótulo */}
       <div className="text-center">
-        <p className="text-xs text-onix-300 uppercase tracking-widest">Prévia do caderno</p>
+        <p className="text-xs text-onix-500 uppercase tracking-widest">Prévia do caderno</p>
         <p className="text-sm font-serif text-onix-500 mt-0.5">
           {tamanho} · {formato} · {espessura}
         </p>
@@ -1456,7 +1459,7 @@ export default function PreviewCaderno() {
       {/* Dica de rotação — visibilidade controlada via ref, sem re-render */}
       {modo === 'fechado' && (
         <p ref={hintRef}
-          className="text-xs text-onix-200 tracking-widest flex items-center gap-2 transition-opacity duration-500">
+          className="text-xs text-onix-500 tracking-widest flex items-center gap-2 transition-opacity duration-500">
           <svg width="16" height="10" viewBox="0 0 16 10" fill="none">
             <path d="M1 5h14M10 1l4 4-4 4M6 1L2 5l4 4" stroke="currentColor" strokeWidth="1.2" strokeLinecap="round"/>
           </svg>
@@ -1467,24 +1470,25 @@ export default function PreviewCaderno() {
       {/* Botão Abrir / Fechar */}
       <button
         onClick={() => setModo(m => m === 'fechado' ? 'aberto' : 'fechado')}
-        className="text-xs font-sans tracking-widest uppercase border border-ivoire-400 hover:border-onix-400 text-onix-400 hover:text-onix-600 px-5 py-2 transition-all duration-150"
+        className="text-xs font-sans tracking-widest uppercase border border-ivoire-400 hover:border-onix-400 text-onix-600 hover:text-onix-700 px-5 py-2 transition-all duration-150"
       >
         {modo === 'fechado' ? 'Abrir caderno' : 'Fechar caderno'}
       </button>
 
       {/* Tags de resumo */}
       <div className="flex flex-wrap gap-1.5 justify-center max-w-xs">
-        <span className="text-xs bg-ivoire-300 text-onix-400 px-2 py-0.5">{materialCapa}</span>
-        <span className="text-xs bg-ivoire-300 text-onix-400 px-2 py-0.5">{tipoEncadernacao}</span>
-        <span className="text-xs bg-ivoire-300 text-onix-400 px-2 py-0.5">{padraoPaginas}</span>
+        <span className="text-xs bg-ivoire-300 text-onix-600 px-2 py-0.5">{materialCapa}</span>
+        <span className="text-xs bg-ivoire-300 text-onix-600 px-2 py-0.5">{tipoEncadernacao}</span>
+        <span className="text-xs bg-ivoire-300 text-onix-600 px-2 py-0.5">{padraoPaginas}</span>
         {gravacaoCapa && gravacaoCapa !== 'nenhuma' && nomeGravado && (
           <span className="text-xs bg-ouro-100 text-onix-500 px-2 py-0.5 border border-ouro-300">
             {gravacaoCapa}: &ldquo;{nomeGravado}&rdquo;
           </span>
         )}
-        {elasticoAtivo && <span className="text-xs bg-ivoire-300 text-onix-400 px-2 py-0.5">com elástico</span>}
-        {marcadorAtivo && <span className="text-xs bg-ivoire-300 text-onix-400 px-2 py-0.5">com marcador</span>}
+        {elasticoAtivo && <span className="text-xs bg-ivoire-300 text-onix-600 px-2 py-0.5">com elástico</span>}
+        {marcadorAtivo && <span className="text-xs bg-ivoire-300 text-onix-600 px-2 py-0.5">com marcador</span>}
       </div>
     </div>
+    </LazyMotion>
   )
 }

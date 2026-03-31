@@ -1,6 +1,8 @@
 'use client'
 
-import { motion, AnimatePresence } from 'framer-motion'
+import { LazyMotion, m as motion, AnimatePresence } from 'framer-motion'
+
+const loadFeatures = () => import('@/lib/motion-features').then(r => r.default)
 import { useCadernoStore } from '@/store/useCadernoStore'
 import type { Pergunta } from '@/data/perguntas'
 import type { ConfiguracaoCaderno } from '@/types/caderno'
@@ -48,7 +50,7 @@ function SelecaoGrade({ pergunta, aoSelecionar }: {
               {opcao.label}
             </span>
             {opcao.descricao && (
-              <span className="block text-xs text-onix-300 mt-1 leading-snug">{opcao.descricao}</span>
+              <span className="block text-xs text-onix-500 mt-1 leading-snug">{opcao.descricao}</span>
             )}
             {selecionado && (
               <span className="block mt-2">
@@ -99,7 +101,7 @@ function SelecaoLista({ pergunta, aoSelecionar }: {
                 {opcao.label}
               </span>
               {opcao.descricao && (
-                <span className="block text-xs text-onix-300 mt-0.5 leading-snug">{opcao.descricao}</span>
+                <span className="block text-xs text-onix-500 mt-0.5 leading-snug">{opcao.descricao}</span>
               )}
             </span>
 
@@ -147,7 +149,7 @@ function SeletorCor({ pergunta, aoSelecionar }: {
 
       {/* Cor personalizada */}
       <div className="flex items-center gap-3">
-        <span className="text-xs text-onix-300 tracking-wide uppercase">Personalizada</span>
+        <span className="text-xs text-onix-500 tracking-wide uppercase">Personalizada</span>
         <input
           type="color"
           value={valorAtual.startsWith('#') ? valorAtual : '#6B4226'}
@@ -156,14 +158,14 @@ function SeletorCor({ pergunta, aoSelecionar }: {
           }}
           className="w-9 h-9 rounded-full cursor-pointer border border-ivoire-400 flex-shrink-0"
         />
-        <span className="text-xs font-mono text-onix-300">{valorAtual}</span>
+        <span className="text-xs font-mono text-onix-500">{valorAtual}</span>
       </div>
 
       {/* Preview da cor selecionada */}
       <motion.div
         className="h-14 border border-ivoire-400 flex items-end justify-end p-2"
         style={{ backgroundColor: valorAtual.startsWith('#') ? valorAtual : '#6B4226' }}
-        animate={{ backgroundColor: valorAtual }}
+        animate={{ backgroundColor: valorAtual } as Record<string, string>}
         transition={{ duration: 0.3 }}
       >
         <span className="text-xs font-sans font-medium bg-white/70 px-2 py-0.5 text-onix-500 tracking-wider">
@@ -195,9 +197,9 @@ function Toggle({ pergunta, aoSelecionar }: {
         `}
       >
         <span className="block mb-2">
-          <IconeCheck tamanho={20} className={`mx-auto ${valorAtual ? 'text-ouro-400' : 'text-onix-200'}`} />
+          <IconeCheck tamanho={20} className={`mx-auto ${valorAtual ? 'text-ouro-400' : 'text-onix-400'}`} />
         </span>
-        <span className={`block text-sm font-serif ${valorAtual ? 'text-onix-700' : 'text-onix-300'}`}>
+        <span className={`block text-sm font-serif ${valorAtual ? 'text-onix-700' : 'text-onix-500'}`}>
           Sim, quero
         </span>
       </button>
@@ -211,8 +213,8 @@ function Toggle({ pergunta, aoSelecionar }: {
           }
         `}
       >
-        <span className={`block text-xl mb-2 font-sans ${!valorAtual ? 'text-onix-500' : 'text-onix-200'}`}>—</span>
-        <span className={`block text-sm font-serif ${!valorAtual ? 'text-onix-700' : 'text-onix-300'}`}>
+        <span className={`block text-xl mb-2 font-sans ${!valorAtual ? 'text-onix-500' : 'text-onix-400'}`}>—</span>
+        <span className={`block text-sm font-serif ${!valorAtual ? 'text-onix-700' : 'text-onix-500'}`}>
           Não, obrigado
         </span>
       </button>
@@ -279,7 +281,7 @@ function MultiplaEscolha({ pergunta }: { pergunta: Pergunta }) {
                 {opcao.label}
               </span>
               {opcao.descricao && (
-                <span className="block text-xs text-onix-300 mt-0.5 leading-snug">{opcao.descricao}</span>
+                <span className="block text-xs text-onix-500 mt-0.5 leading-snug">{opcao.descricao}</span>
               )}
             </span>
           </button>
@@ -306,7 +308,7 @@ function CampoTexto({ pergunta }: { pergunta: Pergunta }) {
                    placeholder:text-onix-200 focus:outline-none bg-white transition-colors duration-200
                    resize-none font-sans"
       />
-      <div className="flex justify-between text-xs text-onix-300">
+      <div className="flex justify-between text-xs text-onix-500">
         <span className="tracking-wide">Será gravado exatamente como você escrever</span>
         <span className="font-mono">{valor.length}/40</span>
       </div>
@@ -329,6 +331,7 @@ export default function PerguntaUnica({ pergunta, totalPerguntas: _totalPergunta
   }
 
   return (
+    <LazyMotion features={loadFeatures}>
     <AnimatePresence mode="wait" custom={direcao}>
       <motion.div
         key={pergunta.id}
@@ -345,7 +348,7 @@ export default function PerguntaUnica({ pergunta, totalPerguntas: _totalPergunta
             {pergunta.titulo}
           </h2>
           {pergunta.descricao && (
-            <p className="text-xs text-onix-300 mt-1.5 leading-relaxed tracking-wide">
+            <p className="text-xs text-onix-500 mt-1.5 leading-relaxed tracking-wide">
               {pergunta.descricao}
             </p>
           )}
@@ -374,5 +377,6 @@ export default function PerguntaUnica({ pergunta, totalPerguntas: _totalPergunta
         )}
       </motion.div>
     </AnimatePresence>
+    </LazyMotion>
   )
 }
