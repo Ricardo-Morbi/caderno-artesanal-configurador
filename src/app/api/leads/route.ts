@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { getSupabaseAdmin } from '@/lib/supabase'
+import { verificarAdmin } from '@/lib/admin-auth'
 
 // POST /api/leads — Salva lead parcial
 export async function POST(request: NextRequest) {

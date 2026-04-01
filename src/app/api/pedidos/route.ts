@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { getSupabaseAdmin } from '@/lib/supabase'
+import { verificarAdmin } from '@/lib/admin-auth'
 
 // GET /api/pedidos — Lista pedidos (admin)
 export async function GET(request: NextRequest) {
