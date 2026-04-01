@@ -146,7 +146,50 @@ function TotalPedido({ valor }: { valor: number }) {
 }
 
 // ─── Modal de solicitação ──────────────────────────────────────
-function ModalSolicitar({ total, aoFechar }: { total: number; aoFechar: () => void }) {
+function ModalSolicitar({
+  total,
+  configuracao,
+  aoFechar,
+}: {
+  total: number
+  configuracao: ConfiguracaoCaderno
+  aoFechar: () => void
+}) {
+  const [nome, setNome] = useState('')
+  const [whatsapp, setWhatsapp] = useState('')
+  const [enviando, setEnviando] = useState(false)
+  const [erro, setErro] = useState('')
+
+  async function handleEnviar(e: React.FormEvent) {
+    e.preventDefault()
+    setErro('')
+    setEnviando(true)
+
+    try {
+      const res = await fetch('/api/pedidos', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ nome, whatsapp, configuracao, total }),
+      })
+
+      if (!res.ok) throw new Error('Erro ao salvar pedido')
+
+      const numeroWhats = process.env.NEXT_PUBLIC_WHATSAPP_NUMERO ?? '5500000000000'
+      const texto = encodeURIComponent(
+        `Olá! Acabei de configurar meu caderno artesanal pelo site.\n\n` +
+        `*Nome:* ${nome}\n` +
+        `*Valor estimado:* R$ ${total.toFixed(2).replace('.', ',')}\n\n` +
+        `Gostaria de confirmar o pedido! 🎉`
+      )
+      window.open(`https://wa.me/${numeroWhats}?text=${texto}`, '_blank')
+      aoFechar()
+    } catch {
+      setErro('Não foi possível enviar o pedido. Tente novamente.')
+    } finally {
+      setEnviando(false)
+    }
+  }
+
   return (
     <div
       className="fixed inset-0 z-50 flex items-end lg:items-center justify-center bg-onix-800/60 backdrop-blur-sm px-4 pb-8 lg:pb-0"
@@ -157,22 +200,56 @@ function ModalSolicitar({ total, aoFechar }: { total: number; aoFechar: () => vo
         onClick={(e) => e.stopPropagation()}
       >
         <div className="w-8 h-px bg-ouro-400 mb-6" />
-        <h3 className="text-lg font-serif text-onix-700 mb-2">Pedido pronto!</h3>
+        <h3 className="text-lg font-serif text-onix-700 mb-2">Quase lá!</h3>
         <p className="text-sm text-onix-400 leading-relaxed mb-1">
           Seu caderno foi configurado. O valor estimado é:
         </p>
         <p className="text-2xl font-serif text-onix-700 mb-6">
           R$ {total.toFixed(2).replace('.', ',')}
         </p>
-        <p className="text-xs text-onix-300 mb-6 leading-relaxed">
-          Em breve você poderá finalizar o pedido diretamente pelo WhatsApp. Aguarde!
-        </p>
-        <button
-          onClick={aoFechar}
-          className="w-full bg-onix-700 hover:bg-onix-800 text-ivoire-100 py-3 text-xs tracking-widest uppercase font-sans transition-colors duration-200"
-        >
-          Fechar
-        </button>
+
+        <form onSubmit={handleEnviar}>
+          <label className="block text-xs text-onix-500 tracking-widest uppercase font-sans mb-1.5">
+            Seu nome
+          </label>
+          <input
+            type="text"
+            value={nome}
+            onChange={e => setNome(e.target.value)}
+            className="w-full border border-ivoire-400 bg-ivoire-50 px-4 py-2.5 text-sm text-onix-700 outline-none focus:border-onix-400 transition-colors mb-4"
+            placeholder="Maria Silva"
+            required
+          />
+
+          <label className="block text-xs text-onix-500 tracking-widest uppercase font-sans mb-1.5">
+            WhatsApp
+          </label>
+          <input
+            type="tel"
+            value={whatsapp}
+            onChange={e => setWhatsapp(e.target.value)}
+            className="w-full border border-ivoire-400 bg-ivoire-50 px-4 py-2.5 text-sm text-onix-700 outline-none focus:border-onix-400 transition-colors mb-6"
+            placeholder="(11) 99999-9999"
+            required
+          />
+
+          {erro && <p className="text-xs text-red-600 mb-4">{erro}</p>}
+
+          <button
+            type="submit"
+            disabled={enviando}
+            className="w-full bg-onix-700 hover:bg-onix-800 disabled:opacity-50 text-ivoire-100 py-3 text-xs tracking-widest uppercase font-sans transition-colors duration-200 mb-3"
+          >
+            {enviando ? 'Enviando...' : 'Finalizar pelo WhatsApp'}
+          </button>
+          <button
+            type="button"
+            onClick={aoFechar}
+            className="w-full text-xs text-onix-400 hover:text-onix-600 py-1 font-sans transition-colors"
+          >
+            Cancelar
+          </button>
+        </form>
       </div>
     </div>
   )
@@ -231,7 +308,7 @@ export default function PaginaConfigurador() {
 
       {/* Modal de solicitação */}
       {modalAberto && (
-        <ModalSolicitar total={totalValor} aoFechar={fecharModal} />
+        <ModalSolicitar total={totalValor} configuracao={configuracao} aoFechar={fecharModal} />
       )}
 
       {/* ── SOBRANCELHA ── */}
