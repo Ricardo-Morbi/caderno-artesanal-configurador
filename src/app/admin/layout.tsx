@@ -16,22 +16,11 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
 
   return (
     <div className="min-h-screen bg-ivoire-100 flex flex-col">
-      {/* Navbar admin */}
       <header className="bg-onix-800 text-ivoire-100">
         <div className="max-w-screen-xl mx-auto flex items-center justify-between px-5 py-3">
           <div className="flex items-center gap-6">
             <span className="font-serif text-base">Caderno Artesanal</span>
             <nav className="flex items-center gap-1">
-              <Link
-                href="/admin/dashboard"
-                className={`px-4 py-1.5 text-xs tracking-widest uppercase font-sans rounded-sm transition-colors ${
-                  pathname === '/admin/dashboard'
-                    ? 'bg-white/10 text-ivoire-100'
-                    : 'text-ivoire-300 hover:text-ivoire-100'
-                }`}
-              >
-                Dashboard
-              </Link>
               <Link
                 href="/admin/pedidos"
                 className={`px-4 py-1.5 text-xs tracking-widest uppercase font-sans rounded-sm transition-colors ${
@@ -41,6 +30,26 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
                 }`}
               >
                 Pedidos
+              </Link>
+              <Link
+                href="/admin/contatos"
+                className={`px-4 py-1.5 text-xs tracking-widest uppercase font-sans rounded-sm transition-colors ${
+                  pathname === '/admin/contatos'
+                    ? 'bg-white/10 text-ivoire-100'
+                    : 'text-ivoire-300 hover:text-ivoire-100'
+                }`}
+              >
+                Contatos
+              </Link>
+              <Link
+                href="/admin/dashboard"
+                className={`px-4 py-1.5 text-xs tracking-widest uppercase font-sans rounded-sm transition-colors ${
+                  pathname === '/admin/dashboard'
+                    ? 'bg-white/10 text-ivoire-100'
+                    : 'text-ivoire-300 hover:text-ivoire-100'
+                }`}
+              >
+                Dashboard
               </Link>
             </nav>
           </div>
