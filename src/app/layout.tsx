@@ -2,7 +2,7 @@ import type { Metadata, Viewport } from 'next'
 import './globals.css'
 
 export const metadata: Metadata = {
-  title: 'Caderno Artesanal Configurador | Monte o Seu Caderno Ideal',
+  title: 'DMO | Papelaria',
   description:
     'Crie o caderno artesanal perfeito para você. Personalize capa, miolo, encadernação, acabamentos e muito mais — com preview em tempo real enquanto você monta.',
   keywords: [
@@ -13,8 +13,12 @@ export const metadata: Metadata = {
     'diário personalizado',
     'planner artesanal',
   ],
+  icons: {
+    icon: '/favicon.png',
+    apple: '/favicon.png',
+  },
   openGraph: {
-    title: 'Monte o Seu Caderno Artesanal Ideal',
+    title: 'DMO | Papelaria',
     description:
       'Personalize cada detalhe do seu caderno e veja como vai ficar em tempo real.',
     type: 'website',
