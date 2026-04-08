@@ -27,6 +27,40 @@ function SelecaoGrade({ pergunta, aoSelecionar }: {
     <div className="grid grid-cols-2 gap-2">
       {pergunta.opcoes?.map((opcao) => {
         const selecionado = valorAtual === opcao.valor
+        // Card com imagem de textura real
+        if (opcao.imagem) {
+          return (
+            <button
+              key={opcao.valor}
+              onClick={() => aoSelecionar(opcao.valor)}
+              className={`
+                relative overflow-hidden border transition-all duration-200 active:scale-[0.98]
+                ${selecionado ? 'border-onix-600 shadow-luxo-md ring-2 ring-ouro-400' : 'border-ivoire-400 hover:border-onix-300'}
+              `}
+              style={{ aspectRatio: '3/4' }}
+            >
+              <img
+                src={opcao.imagem}
+                alt={opcao.label}
+                className="absolute inset-0 w-full h-full object-cover"
+              />
+              {/* Overlay com nome */}
+              <div className="absolute inset-x-0 bottom-0 bg-gradient-to-t from-black/60 to-transparent p-2">
+                <span className="block text-xs font-serif text-white">{opcao.label}</span>
+                {opcao.descricao && (
+                  <span className="block text-[10px] text-white/70 leading-tight">{opcao.descricao}</span>
+                )}
+              </div>
+              {/* Check de selecionado */}
+              {selecionado && (
+                <span className="absolute top-2 right-2 bg-ouro-400 rounded-full p-0.5">
+                  <IconeCheck tamanho={10} className="text-white" />
+                </span>
+              )}
+            </button>
+          )
+        }
+        // Card padrão (sem imagem)
         return (
           <button
             key={opcao.valor}

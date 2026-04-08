@@ -109,6 +109,9 @@ const configuracaoPadrao: ConfiguracaoCaderno = {
   portaCaneta: false,
   abasOrelhas: false,
 
+  // Papel especial
+  papelEspecialId: '',
+
   // Capa — Q28/29
   tipoEmbalagem: 'padrao',
   padraoEmbalagem: 'algodao-cru',

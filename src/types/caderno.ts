@@ -221,6 +221,9 @@ export interface ConfiguracaoCaderno {
   portaCaneta: boolean
   abasOrelhas: boolean
 
+  // Papel especial selecionado (condicional: materialCapa === 'papel-especial')
+  papelEspecialId: string
+
   // Q28 — Embalagem
   tipoEmbalagem: TipoEmbalagem
 

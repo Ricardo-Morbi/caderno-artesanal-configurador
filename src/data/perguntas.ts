@@ -25,6 +25,7 @@ export interface OpcaoPergunta {
   descricao?: string
   hex?: string          // para opções de cor
   altura?: number       // para a espessura visual
+  imagem?: string       // para opções com foto (ex: papéis especiais)
 }
 
 export interface Pergunta {
@@ -412,16 +413,22 @@ export const TODAS_PERGUNTAS: Pergunta[] = [
     opcoes: CORES_CAPA_SINTETICO.map((c) => ({ valor: c.hex, label: c.nome, hex: c.hex })),
   },
 
-  // Cor da capa — papel especial
+  // Papel especial — escolha da textura com foto real
   {
     id: 'corCapa-papel',
     grupo: 2,
-    titulo: 'Qual a cor da capa?',
-    descricao: 'Escolha a opção de papel especial',
-    tipo: 'cor',
-    campo: 'corCapa',
+    titulo: 'Qual papel especial você quer na capa?',
+    descricao: 'Textura madeira em relevo — escolha a cor',
+    tipo: 'selecao-grade',
+    campo: 'papelEspecialId',
+    avancaAutomatico: true,
     visivel: (c) => c.materialCapa === 'papel-especial',
-    opcoes: CORES_CAPA_PAPEL_ESPECIAL.map((c) => ({ valor: c.hex, label: c.nome, hex: c.hex })),
+    opcoes: [
+      { valor: 'Papel-1',   label: 'Branco',     descricao: 'Relevo madeira · Off-white',   imagem: '/papeis-especiais/Papel-1.webp' },
+      { valor: 'Papel-3_1', label: 'Rosa Nude',  descricao: 'Relevo madeira · Rosa claro',  imagem: '/papeis-especiais/Papel-3_1.webp' },
+      { valor: 'Papel-2',   label: 'Verde Oliva',descricao: 'Relevo madeira · Verde militar',imagem: '/papeis-especiais/Papel-2.webp' },
+      { valor: 'Papel-4_1', label: 'Marrom',     descricao: 'Relevo madeira · Chocolate',   imagem: '/papeis-especiais/Papel-4_1.webp' },
+    ],
   },
 
   // Cor da capa — tecido: campo de texto para cor principal

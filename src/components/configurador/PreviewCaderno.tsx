@@ -685,6 +685,7 @@ function FaceFrente({ W, H, corCapa, materialCapa, estampaCapa,
   pinturaBordasAtiva, corPinturaBordas,
   corBordado, tipoTipografia,
   tipoTextura, tipoLaminacao, abasOrelhas, tipoCantoneiras,
+  papelEspecialId,
 }: {
   W: number; H: number; corCapa: string; materialCapa: string; estampaCapa: string
   gravacaoCapa: string; nomeGravado: string; posicaoGravacao: string; aplicacoesCapa: string[]
@@ -694,6 +695,7 @@ function FaceFrente({ W, H, corCapa, materialCapa, estampaCapa,
   pinturaBordasAtiva: boolean; corPinturaBordas: string
   corBordado: string; tipoTipografia: string
   tipoTextura: string; tipoLaminacao: string; abasOrelhas: boolean; tipoCantoneiras: string
+  papelEspecialId?: string
 }) {
   const ehCouro = materialCapa === 'couro' || materialCapa === 'sintetico'
   // granulada força grain em qualquer material; lisa remove grain até do couro
@@ -741,13 +743,11 @@ function FaceFrente({ W, H, corCapa, materialCapa, estampaCapa,
             <feBlend in="SourceGraphic" in2="combined" mode="soft-light"/>
           </filter>
         )}
-        {/* Papel especial — linhas vergê (laid paper) */}
-        {materialCapa === 'papel-especial' && (
-          <pattern id="verge-fr" x="0" y="0" width="1" height="3" patternUnits="userSpaceOnUse">
-            <line x1={0} y1={0} x2={W} y2={0}
-              stroke={lum < 0.45 ? 'rgba(255,255,255,0.10)' : 'rgba(0,0,0,0.07)'}
-              strokeWidth="0.5"/>
-          </pattern>
+        {/* Papel especial — clipPath para imagem real */}
+        {materialCapa === 'papel-especial' && papelEspecialId && (
+          <clipPath id="clip-papel-fr">
+            <rect width={W} height={H} rx={raioCanto}/>
+          </clipPath>
         )}
         {/* Laminação brilho — gradiente especular forte */}
         {tipoLaminacao === 'brilho' && (
@@ -784,9 +784,14 @@ function FaceFrente({ W, H, corCapa, materialCapa, estampaCapa,
       {materialCapa === 'linho'  && <rect width={W} height={H} rx={raioCanto} fill="url(#lf)"/>}
       {materialCapa === 'tecido' && <rect width={W} height={H} rx={raioCanto} fill="url(#tf)"/>}
       {materialCapa === 'kraft'  && <rect width={W} height={H} rx={raioCanto} fill="url(#kf)"/>}
-      {/* Papel especial — linhas vergê sobrepostas */}
-      {materialCapa === 'papel-especial' && (
-        <rect width={W} height={H} rx={raioCanto} fill="url(#verge-fr)"/>
+      {/* Papel especial — imagem real da textura */}
+      {materialCapa === 'papel-especial' && papelEspecialId && (
+        <image
+          href={`/papeis-especiais/${papelEspecialId}.webp`}
+          x={0} y={0} width={W} height={H}
+          preserveAspectRatio="xMidYMid slice"
+          clipPath="url(#clip-papel-fr)"
+        />
       )}
 
       {/* Leather veins (couro real) */}
@@ -1269,6 +1274,7 @@ function Livro3D({ bW, bH, bD, props }: {
     tipoCorteEspecial: string
     corInternaFolhas: string; corBordado: string; tipoTipografia: string
     tipoTextura: string; tipoLaminacao: string; abasOrelhas: boolean; tipoCantoneiras: string
+    papelEspecialId?: string
   }
 }) {
   const { corCapa, materialCapa, estampaCapa, gravacaoCapa, nomeGravado, posicaoGravacao,
@@ -1276,7 +1282,7 @@ function Livro3D({ bW, bH, bD, props }: {
     elasticoAtivo, corElastico, posicaoElastico, marcadorAtivo, tipoMarcador, corMarcador, larguraMarcador,
     portaCaneta, pinturaBordasAtiva, corPinturaBordas, tipoCorteEspecial,
     corInternaFolhas, corBordado, tipoTipografia,
-    tipoTextura, tipoLaminacao, abasOrelhas, tipoCantoneiras } = props
+    tipoTextura, tipoLaminacao, abasOrelhas, tipoCantoneiras, papelEspecialId } = props
 
   const face: React.CSSProperties = { position: 'absolute', overflow: 'hidden' }
   const faceOpen: React.CSSProperties = { position: 'absolute', overflow: 'visible' }
@@ -1298,7 +1304,7 @@ function Livro3D({ bW, bH, bD, props }: {
           pinturaBordasAtiva={pinturaBordasAtiva} corPinturaBordas={corPinturaBordas}
           corBordado={corBordado} tipoTipografia={tipoTipografia}
           tipoTextura={tipoTextura} tipoLaminacao={tipoLaminacao} abasOrelhas={abasOrelhas}
-          tipoCantoneiras={tipoCantoneiras}/>
+          tipoCantoneiras={tipoCantoneiras} papelEspecialId={papelEspecialId}/>
       </div>
 
       {/* VERSO */}
@@ -1383,6 +1389,7 @@ export default function PreviewCaderno() {
     padraoPaginas, corFolhas, tipoPapel,
     materialGuarda, corGuarda, padraoGuarda, padraoGuardaEstampado,
     paginaDedicatoria, querPersonalizacaoCapa,
+    papelEspecialId,
   } = configuracao
 
   const prop = PROPORCAO_POR_FORMATO[formato] ?? PROPORCAO_POR_FORMATO['retrato']
@@ -1417,6 +1424,7 @@ export default function PreviewCaderno() {
 
   const livroProps = {
     corCapa, materialCapa, estampaCapa,
+    papelEspecialId: papelEspecialId ?? '',
     gravacaoCapa: querPersonalizacaoCapa ? gravacaoCapa : 'nenhuma',
     nomeGravado: querPersonalizacaoCapa ? nomeGravado : '',
     posicaoGravacao, aplicacoesCapa: aplicacoesCapa ?? [],

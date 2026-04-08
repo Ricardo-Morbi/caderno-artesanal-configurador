@@ -31,6 +31,7 @@ const CONFIG_SIMULACAO: ConfiguracaoCaderno = {
   quantidadeMarcadores: 1,
   bolsoInterno: false, envelopeAcoplado: false, envelopeContracapa: false, portaCaneta: false, abasOrelhas: false,
   tipoEmbalagem: 'padrao', padraoEmbalagem: 'algodao-cru',
+  papelEspecialId: '',
   // Legado
   impressoesInternas: false, divisoriasInternas: false,
   tipoLaminacao: 'nenhuma', tipoTextura: 'lisa', proposicaoCaderno: 'escrita-livre',
