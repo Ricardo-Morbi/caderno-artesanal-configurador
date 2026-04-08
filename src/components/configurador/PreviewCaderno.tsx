@@ -1277,8 +1277,6 @@ function FaceTopo({ W, H, corCapa, corInternaFolhas, pinturaBordasAtiva, corPint
         })
       )}
 
-      {/* Lombada */}
-      <rect width={sW} height={H} fill={corCapa} opacity="0.9"/>
       {/* Luz */}
       <rect width={W} height={H} fill="url(#luz-topo)"/>
     </svg>
