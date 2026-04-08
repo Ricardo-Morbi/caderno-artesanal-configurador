@@ -237,7 +237,7 @@ export default function PaginaConfigurador() {
     }
   }
 
-  const totalValor = calcularPreco(configuracao, tabelaPrecos)
+  const totalValor = perguntaIndex === 0 ? 0 : calcularPreco(configuracao, tabelaPrecos)
 
   return (
     <div className="flex flex-col min-h-screen bg-ivoire-100">

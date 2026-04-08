@@ -26,6 +26,7 @@ const configuracaoPadrao: ConfiguracaoCaderno = {
 
   // Miolo — Q6
   tamanho: 'A5',
+  subtamanhoPersonalizado: '',
 
   // Miolo — Q7
   espessura: 'medio',
@@ -59,7 +60,8 @@ const configuracaoPadrao: ConfiguracaoCaderno = {
   corCapa: '#6B4226',
   corCapaTecido: '',
 
-  // Capa — Q16/17
+  // Capa — Q16
+  querPersonalizacaoCapa: false,
   nomeGravado: '',
   gravacaoCapa: 'nenhuma',
 

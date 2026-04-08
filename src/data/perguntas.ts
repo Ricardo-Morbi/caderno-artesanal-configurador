@@ -37,6 +37,8 @@ export interface Pergunta {
   opcoes?: OpcaoPergunta[]
   visivel?: (config: ConfiguracaoCaderno) => boolean
   avancaAutomatico?: boolean                      // avança ao selecionar sem precisar clicar em próximo
+  placeholder?: string                            // placeholder personalizado para campos texto
+  maxLength?: number                              // limite de caracteres para campos texto
 }
 
 // ============================================================
@@ -72,9 +74,11 @@ export const TODAS_PERGUNTAS: Pergunta[] = [
     id: 'temaPersonalizado',
     grupo: 1,
     titulo: 'Qual tema você deseja?',
-    descricao: 'Escreva aqui qual tema deseja (ex: girassóis, pássaros, natureza...)',
+    descricao: 'Escreva aqui qual tema deseja',
     tipo: 'texto',
     campo: 'temaPersonalizado',
+    placeholder: 'Ex: girassóis, pássaros, oceano, cosmos...',
+    maxLength: 80,
     visivel: (c) => c.temaCaderno === 'versatil',
   },
 
@@ -86,7 +90,7 @@ export const TODAS_PERGUNTAS: Pergunta[] = [
     tipo: 'selecao-grade',
     campo: 'padraoPaginas',
     avancaAutomatico: true,
-    visivel: (c) => ['sem-tema-2', 'planner', 'estudos', 'versatil'].includes(c.temaCaderno),
+    visivel: (c) => ['sem-tema-2', 'estudos', 'versatil'].includes(c.temaCaderno),
     opcoes: [
       { valor: 'pautado',      label: 'Pautado',      descricao: 'Linhas horizontais — escrita organizada' },
       { valor: 'pontilhado',   label: 'Pontilhado',   descricao: 'Grid discreto — versátil e moderno' },
@@ -116,6 +120,8 @@ export const TODAS_PERGUNTAS: Pergunta[] = [
     descricao: 'Escreva aqui qual frase ou citação deseja ao longo das páginas',
     tipo: 'texto',
     campo: 'frasePersonalizada',
+    placeholder: 'Ex: A vida é bela · Viver plena e livremente · Carpe diem...',
+    maxLength: 120,
     visivel: (c) => c.frasesAoLongo,
   },
 
@@ -126,6 +132,8 @@ export const TODAS_PERGUNTAS: Pergunta[] = [
     descricao: 'Escreva as datas de aniversários e eventos especiais',
     tipo: 'texto',
     campo: 'datasPersonalizadas',
+    placeholder: 'Ex: 15/03 – Aniversário da mãe · 22/07 – Casamento · 10/12 – Formatura...',
+    maxLength: 200,
     visivel: (c) => c.datasImportantes,
   },
 
@@ -192,6 +200,21 @@ export const TODAS_PERGUNTAS: Pergunta[] = [
   },
 
   {
+    id: 'subtamanhoPersonalizado',
+    grupo: 1,
+    titulo: 'Qual o formato sob medida?',
+    descricao: 'Escolha a proporção do seu caderno personalizado',
+    tipo: 'selecao-grade',
+    campo: 'subtamanhoPersonalizado',
+    avancaAutomatico: true,
+    visivel: (c) => c.tamanho === 'personalizado',
+    opcoes: [
+      { valor: 'quadrado-15x15', label: 'Quadrado', descricao: '15 × 15 cm — proporção perfeita' },
+      { valor: 'longer-10x25',   label: 'Longer',   descricao: '10 × 25 cm — estreito e alto' },
+    ],
+  },
+
+  {
     id: 'espessura',
     grupo: 1,
     titulo: 'Qual a espessura?',
@@ -253,6 +276,28 @@ export const TODAS_PERGUNTAS: Pergunta[] = [
       { valor: 'marmorizada', label: 'Marmorizada', descricao: 'Efeito mármore · Sofisticado' },
       { valor: 'kraft',       label: 'Kraft',       descricao: 'Rústica · Natural · Artesanal' },
       { valor: 'estampada',   label: 'Estampada',   descricao: 'Com padrão estampado' },
+    ],
+  },
+
+  {
+    id: 'corGuarda',
+    grupo: 1,
+    titulo: 'Qual a cor da guarda?',
+    descricao: 'Escolha a cor sólida das folhas de guarda',
+    tipo: 'cor',
+    campo: 'corGuarda',
+    visivel: (c) => c.materialGuarda === 'colorida',
+    opcoes: [
+      { valor: '#FAF0E6', label: 'Off-White',    hex: '#FAF0E6' },
+      { valor: '#F5F0E0', label: 'Creme',        hex: '#F5F0E0' },
+      { valor: '#FFB6C1', label: 'Rosa claro',   hex: '#FFB6C1' },
+      { valor: '#FF69B4', label: 'Rosa pink',    hex: '#FF69B4' },
+      { valor: '#E6E6FA', label: 'Lavanda',      hex: '#E6E6FA' },
+      { valor: '#87CEEB', label: 'Azul claro',   hex: '#87CEEB' },
+      { valor: '#1B3A5C', label: 'Azul marinho', hex: '#1B3A5C' },
+      { valor: '#98FB98', label: 'Verde claro',  hex: '#98FB98' },
+      { valor: '#FFD700', label: 'Amarelo',      hex: '#FFD700' },
+      { valor: '#1A1A1A', label: 'Preto',        hex: '#1A1A1A' },
     ],
   },
 
@@ -387,6 +432,8 @@ export const TODAS_PERGUNTAS: Pergunta[] = [
     descricao: 'Escreva a seguir qual a cor principal do tecido do seu caderno/livro',
     tipo: 'texto',
     campo: 'corCapaTecido',
+    placeholder: 'Ex: azul marinho, rosa chá, estampado floral...',
+    maxLength: 60,
     visivel: (c) => c.materialCapa === 'tecido',
   },
 
@@ -409,12 +456,25 @@ export const TODAS_PERGUNTAS: Pergunta[] = [
   },
 
   {
+    id: 'querPersonalizacaoCapa',
+    grupo: 2,
+    titulo: 'Deseja personalizar a capa com nome, iniciais ou frase?',
+    descricao: 'Gravação, bordado ou baixo/alto relevo — +R$25,00',
+    tipo: 'toggle',
+    campo: 'querPersonalizacaoCapa',
+    avancaAutomatico: true,
+  },
+
+  {
     id: 'nomeGravado',
     grupo: 2,
-    titulo: 'Deseja personalizar a capa?',
-    descricao: 'Nome, iniciais, data ou frase (máx. 40 caracteres) — ou deixe em branco para sem personalização',
+    titulo: 'O que você quer gravado?',
+    descricao: 'Nome, iniciais, data ou frase curta (máx. 40 caracteres)',
     tipo: 'texto',
     campo: 'nomeGravado',
+    placeholder: 'Ex: Ana Carolina · AC · carpe diem · 2024',
+    maxLength: 40,
+    visivel: (c) => c.querPersonalizacaoCapa,
   },
 
   {
@@ -424,11 +484,28 @@ export const TODAS_PERGUNTAS: Pergunta[] = [
     tipo: 'selecao-lista',
     campo: 'gravacaoCapa',
     avancaAutomatico: true,
-    visivel: (c) => c.nomeGravado.trim().length > 0,
+    visivel: (c) => c.querPersonalizacaoCapa && c.nomeGravado.trim().length > 0,
     opcoes: [
       { valor: 'baixo-relevo', label: 'Baixo relevo', descricao: 'Sutil e elegante — afundado na capa · +R$25,00' },
       { valor: 'alto-relevo',  label: 'Alto relevo',  descricao: 'Marcante — elevado na capa · +R$25,00' },
       { valor: 'bordado',      label: 'Bordado',      descricao: 'Feito à mão com fio — o mais artesanal · +R$25,00' },
+    ],
+  },
+
+  {
+    id: 'posicaoGravacao',
+    grupo: 2,
+    titulo: 'Onde deseja o texto na capa?',
+    descricao: 'Posicionamento da personalização na capa',
+    tipo: 'selecao-grade',
+    campo: 'posicaoGravacao',
+    avancaAutomatico: true,
+    visivel: (c) => c.querPersonalizacaoCapa && c.nomeGravado.trim().length > 0,
+    opcoes: [
+      { valor: 'centro',            label: 'Centro',           descricao: 'No meio da capa — o mais clássico' },
+      { valor: 'terco-superior',    label: 'Terço superior',   descricao: 'Na parte de cima' },
+      { valor: 'terco-inferior',    label: 'Terço inferior',   descricao: 'Na parte de baixo' },
+      { valor: 'canto-inf-direito', label: 'Canto inferior',   descricao: 'Discreto, no canto dir. embaixo' },
     ],
   },
 
@@ -440,7 +517,7 @@ export const TODAS_PERGUNTAS: Pergunta[] = [
     tipo: 'selecao-grade',
     campo: 'tipoBordado',
     avancaAutomatico: true,
-    visivel: (c) => c.gravacaoCapa === 'bordado',
+    visivel: (c) => c.querPersonalizacaoCapa && c.gravacaoCapa === 'bordado',
     opcoes: [
       { valor: 'cor-unica', label: 'Cor única',  descricao: 'Um fio, resultado elegante e clássico' },
       { valor: 'colorido',  label: 'Colorido',   descricao: 'Duas ou mais cores combinando com a capa' },

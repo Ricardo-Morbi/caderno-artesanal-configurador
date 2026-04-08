@@ -295,14 +295,16 @@ function MultiplaEscolha({ pergunta }: { pergunta: Pergunta }) {
 function CampoTexto({ pergunta }: { pergunta: Pergunta }) {
   const { configuracao, atualizarOpcao } = useCadernoStore()
   const valor = String(configuracao[pergunta.campo] ?? '')
+  const placeholder = pergunta.placeholder ?? 'Escreva aqui...'
+  const maxLength = pergunta.maxLength ?? 200
 
   return (
     <div className="flex flex-col gap-3">
       <textarea
         value={valor}
         onChange={(e) => atualizarOpcao(pergunta.campo as keyof ConfiguracaoCaderno, e.target.value as never)}
-        placeholder="Ex: Ana Carolina · AC · carpe diem · 2024"
-        maxLength={40}
+        placeholder={placeholder}
+        maxLength={maxLength}
         rows={2}
         className="w-full border border-ivoire-400 focus:border-onix-400 px-4 py-3 text-sm text-onix-600
                    placeholder:text-onix-200 focus:outline-none bg-white transition-colors duration-200
@@ -310,7 +312,7 @@ function CampoTexto({ pergunta }: { pergunta: Pergunta }) {
       />
       <div className="flex justify-between text-xs text-onix-500">
         <span className="tracking-wide">Será gravado exatamente como você escrever</span>
-        <span className="font-mono">{valor.length}/40</span>
+        <span className="font-mono">{valor.length}/{maxLength}</span>
       </div>
     </div>
   )

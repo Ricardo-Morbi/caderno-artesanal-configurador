@@ -130,6 +130,7 @@ export interface ConfiguracaoCaderno {
 
   // Q6 — Tamanho
   tamanho: TamanhosCaderno
+  subtamanhoPersonalizado: string   // condicional: tamanho === 'personalizado'
 
   // Q7 — Espessura
   espessura: EspessuraCaderno
@@ -165,10 +166,13 @@ export interface ConfiguracaoCaderno {
   corCapa: string
   corCapaTecido: string            // condicional: tecido — campo de texto
 
-  // Q16 — Nome/gravação
+  // Q16 — Querer personalização (toggle Sim/Não)
+  querPersonalizacaoCapa: boolean
+
+  // Q16b — Nome/gravação (condicional: querPersonalizacaoCapa)
   nomeGravado: string
 
-  // Q17 — Tipo de personalização (condicional: nomeGravado não vazio)
+  // Q17 — Tipo de personalização (condicional: querPersonalizacaoCapa && nomeGravado não vazio)
   gravacaoCapa: GravacaoCapa
 
   // Q18 — Bordado (condicional: gravacaoCapa === 'bordado')

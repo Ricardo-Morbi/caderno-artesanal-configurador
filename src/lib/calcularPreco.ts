@@ -268,7 +268,7 @@ export function calcularPreco(c: ConfiguracaoCaderno, _t?: TabelaPrecos): number
   }
 
   // Personalização (qualquer tipo) — R$25
-  if (c.gravacaoCapa !== 'nenhuma' && c.nomeGravado.trim().length > 0) {
+  if (c.querPersonalizacaoCapa && c.nomeGravado.trim().length > 0) {
     custo += 25
   }
 
