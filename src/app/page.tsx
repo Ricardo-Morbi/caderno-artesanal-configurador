@@ -185,7 +185,7 @@ function ModalSolicitar({
 
 // ─── Página principal ──────────────────────────────────────────
 export default function PaginaConfigurador() {
-  const { configuracao, perguntaIndex, avancarPergunta, voltarPergunta, irParaPergunta } = useCadernoStore()
+  const { configuracao, perguntaIndex, avancarPergunta, voltarPergunta, irParaPergunta, perguntasRespondidas } = useCadernoStore()
   const direcaoRef = useRef(1)
   const previewRef = useRef<HTMLElement>(null)
   const configAnteriorRef = useRef(configuracao)
@@ -219,6 +219,12 @@ export default function PaginaConfigurador() {
   const eUltima = perguntaIndex === total - 1
 
   function avancar() {
+    if (!podeAvancar) {
+      setTentouAvancarSemResposta(true)
+      setTimeout(() => setTentouAvancarSemResposta(false), 800)
+      return
+    }
+    setTentouAvancarSemResposta(false)
     direcaoRef.current = 1
     avancarPergunta(total)
   }
@@ -238,6 +244,12 @@ export default function PaginaConfigurador() {
   }
 
   const totalValor = perguntaIndex === 0 ? 0 : calcularPreco(configuracao, tabelaPrecos)
+
+  // Perguntas opcionais — não bloqueiam o avanço
+  const tiposOpcionais = ['multipla-escolha', 'texto']
+  const podeAvancar = !perguntaAtual || tiposOpcionais.includes(perguntaAtual.tipo)
+    || perguntasRespondidas.includes(perguntaAtual.id)
+  const [tentouAvancarSemResposta, setTentouAvancarSemResposta] = useState(false)
 
   return (
     <div className="flex flex-col min-h-screen bg-ivoire-100">
@@ -414,15 +426,16 @@ export default function PaginaConfigurador() {
                 </button>
                 <button
                   onClick={eUltima ? abrirModal : avancar}
-                  className="
+                  className={`
                     flex-1 flex items-center justify-center gap-2
                     bg-onix-700 hover:bg-onix-800 text-ivoire-100
                     px-5 py-3 text-xs tracking-widest uppercase font-sans
                     transition-all duration-200 active:scale-95
-                  "
+                    ${tentouAvancarSemResposta ? 'animate-shake ring-2 ring-ouro-400' : ''}
+                  `}
                 >
-                  {eUltima ? 'Finalizar' : 'Próximo'}
-                  {!eUltima && <IconeSeta tamanho={14} />}
+                  {eUltima ? 'Finalizar' : tentouAvancarSemResposta ? 'Selecione uma opção ↑' : 'Próximo'}
+                  {!eUltima && !tentouAvancarSemResposta && <IconeSeta tamanho={14} />}
                 </button>
               </div>
 
@@ -483,15 +496,16 @@ export default function PaginaConfigurador() {
           <button
             onClick={eUltima ? abrirModal : avancar}
             aria-label={eUltima ? 'Finalizar pedido' : 'Próxima pergunta'}
-            className="
+            className={`
               flex items-center gap-2
               bg-onix-700 hover:bg-onix-800 text-ivoire-100
               px-5 h-10 text-xs tracking-widest uppercase font-sans
               transition-all duration-200 active:scale-95 flex-shrink-0
-            "
+              ${tentouAvancarSemResposta ? 'animate-shake ring-2 ring-ouro-400' : ''}
+            `}
           >
-            {eUltima ? 'Solicitar' : 'Próximo'}
-            {!eUltima && <IconeSeta tamanho={14} />}
+            {eUltima ? 'Solicitar' : tentouAvancarSemResposta ? '← Escolha' : 'Próximo'}
+            {!eUltima && !tentouAvancarSemResposta && <IconeSeta tamanho={14} />}
           </button>
         </div>
       </nav>

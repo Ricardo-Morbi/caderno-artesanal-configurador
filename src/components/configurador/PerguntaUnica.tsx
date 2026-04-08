@@ -120,7 +120,7 @@ function SeletorCor({ pergunta, aoSelecionar }: {
   pergunta: Pergunta
   aoSelecionar: (valor: string) => void
 }) {
-  const { configuracao, atualizarOpcao } = useCadernoStore()
+  const { configuracao, atualizarOpcao, marcarRespondida } = useCadernoStore()
   const valorAtual = String(configuracao[pergunta.campo] ?? '')
 
   return (
@@ -155,6 +155,7 @@ function SeletorCor({ pergunta, aoSelecionar }: {
           value={valorAtual.startsWith('#') ? valorAtual : '#6B4226'}
           onChange={(e) => {
             atualizarOpcao(pergunta.campo as keyof ConfiguracaoCaderno, e.target.value as never)
+            marcarRespondida(pergunta.id)
           }}
           className="w-9 h-9 rounded-full cursor-pointer border border-ivoire-400 flex-shrink-0"
         />
@@ -224,7 +225,7 @@ function Toggle({ pergunta, aoSelecionar }: {
 
 // ─── Múltipla escolha (checkboxes) ───────────────────────────
 function MultiplaEscolha({ pergunta }: { pergunta: Pergunta }) {
-  const { configuracao, atualizarOpcao, toggleAplicacaoCapa } = useCadernoStore()
+  const { configuracao, atualizarOpcao, toggleAplicacaoCapa, marcarRespondida } = useCadernoStore()
 
   const camposBooleanos = ['extras-elementos', 'extras-afetivos']
   const ehCampoBooleano = camposBooleanos.includes(pergunta.id)
@@ -241,6 +242,7 @@ function MultiplaEscolha({ pergunta }: { pergunta: Pergunta }) {
   }
 
   function toggleOpcao(valor: string) {
+    marcarRespondida(pergunta.id)
     if (ehAplicacoesCapa) {
       toggleAplicacaoCapa(valor as ConfiguracaoCaderno['aplicacoesCapa'][number])
       return
@@ -293,7 +295,7 @@ function MultiplaEscolha({ pergunta }: { pergunta: Pergunta }) {
 
 // ─── Campo de texto ───────────────────────────────────────────
 function CampoTexto({ pergunta }: { pergunta: Pergunta }) {
-  const { configuracao, atualizarOpcao } = useCadernoStore()
+  const { configuracao, atualizarOpcao, marcarRespondida } = useCadernoStore()
   const valor = String(configuracao[pergunta.campo] ?? '')
   const placeholder = pergunta.placeholder ?? 'Escreva aqui...'
   const maxLength = pergunta.maxLength ?? 200
@@ -302,7 +304,10 @@ function CampoTexto({ pergunta }: { pergunta: Pergunta }) {
     <div className="flex flex-col gap-3">
       <textarea
         value={valor}
-        onChange={(e) => atualizarOpcao(pergunta.campo as keyof ConfiguracaoCaderno, e.target.value as never)}
+        onChange={(e) => {
+          atualizarOpcao(pergunta.campo as keyof ConfiguracaoCaderno, e.target.value as never)
+          if (e.target.value.trim().length > 0) marcarRespondida(pergunta.id)
+        }}
         placeholder={placeholder}
         maxLength={maxLength}
         rows={2}
@@ -320,15 +325,17 @@ function CampoTexto({ pergunta }: { pergunta: Pergunta }) {
 
 // ─── COMPONENTE PRINCIPAL ─────────────────────────────────────
 export default function PerguntaUnica({ pergunta, totalPerguntas: _totalPerguntas, direcao, aoAvancarAutomatico }: Props) {
-  const { atualizarOpcao } = useCadernoStore()
+  const { atualizarOpcao, marcarRespondida } = useCadernoStore()
 
   function aoSelecionar(valor: string) {
     atualizarOpcao(pergunta.campo as keyof ConfiguracaoCaderno, valor as never)
+    marcarRespondida(pergunta.id)
     if (pergunta.avancaAutomatico) aoAvancarAutomatico?.()
   }
 
   function aoSelecionarToggle(valor: boolean) {
     atualizarOpcao(pergunta.campo as keyof ConfiguracaoCaderno, valor as never)
+    marcarRespondida(pergunta.id)
     if (pergunta.avancaAutomatico) aoAvancarAutomatico?.()
   }
 

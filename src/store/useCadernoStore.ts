@@ -125,6 +125,7 @@ const configuracaoPadrao: ConfiguracaoCaderno = {
 interface CadernoStore {
   configuracao: ConfiguracaoCaderno
   perguntaIndex: number
+  perguntasRespondidas: string[]
 
   irParaPergunta: (index: number) => void
   avancarPergunta: (total: number) => void
@@ -136,6 +137,7 @@ interface CadernoStore {
   ) => void
 
   toggleAplicacaoCapa: (aplicacao: ConfiguracaoCaderno['aplicacoesCapa'][number]) => void
+  marcarRespondida: (id: string) => void
 
   resetarConfiguracoes: () => void
 }
@@ -143,6 +145,7 @@ interface CadernoStore {
 export const useCadernoStore = create<CadernoStore>((set) => ({
   configuracao: configuracaoPadrao,
   perguntaIndex: 0,
+  perguntasRespondidas: [],
 
   irParaPergunta: (index) => set({ perguntaIndex: index }),
 
@@ -161,6 +164,13 @@ export const useCadernoStore = create<CadernoStore>((set) => ({
       configuracao: { ...state.configuracao, [campo]: valor },
     })),
 
+  marcarRespondida: (id) =>
+    set((state) => ({
+      perguntasRespondidas: state.perguntasRespondidas.includes(id)
+        ? state.perguntasRespondidas
+        : [...state.perguntasRespondidas, id],
+    })),
+
   toggleAplicacaoCapa: (aplicacao) =>
     set((state) => {
       const atual = state.configuracao.aplicacoesCapa
@@ -176,5 +186,5 @@ export const useCadernoStore = create<CadernoStore>((set) => ({
     }),
 
   resetarConfiguracoes: () =>
-    set({ configuracao: configuracaoPadrao, perguntaIndex: 0 }),
+    set({ configuracao: configuracaoPadrao, perguntaIndex: 0, perguntasRespondidas: [] }),
 }))

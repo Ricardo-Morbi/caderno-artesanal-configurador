@@ -623,7 +623,7 @@ function FaceFrente({ W, H, corCapa, materialCapa, estampaCapa,
   portaCaneta,
   pinturaBordasAtiva, corPinturaBordas,
   corBordado, tipoTipografia,
-  tipoTextura, tipoLaminacao, abasOrelhas,
+  tipoTextura, tipoLaminacao, abasOrelhas, tipoCantoneiras,
 }: {
   W: number; H: number; corCapa: string; materialCapa: string; estampaCapa: string
   gravacaoCapa: string; nomeGravado: string; posicaoGravacao: string; aplicacoesCapa: string[]
@@ -632,7 +632,7 @@ function FaceFrente({ W, H, corCapa, materialCapa, estampaCapa,
   portaCaneta: boolean
   pinturaBordasAtiva: boolean; corPinturaBordas: string
   corBordado: string; tipoTipografia: string
-  tipoTextura: string; tipoLaminacao: string; abasOrelhas: boolean
+  tipoTextura: string; tipoLaminacao: string; abasOrelhas: boolean; tipoCantoneiras: string
 }) {
   const ehCouro = materialCapa === 'couro' || materialCapa === 'sintetico'
   // granulada força grain em qualquer material; lisa remove grain até do couro
@@ -641,7 +641,7 @@ function FaceFrente({ W, H, corCapa, materialCapa, estampaCapa,
   const veinColor = lum < 0.45 ? 'rgba(255,255,255,0.07)' : 'rgba(0,0,0,0.06)'
 
   // Ribbon — só a pontinha saindo pela borda inferior, canto esquerdo
-  const rW = larguraMarcador === 'fino' ? 3.5 : larguraMarcador === 'largo' ? 8.5 : 5.5
+  const rW = larguraMarcador === '10mm' ? 8 : larguraMarcador === '7mm' ? 5.5 : larguraMarcador === 'largo' ? 8 : larguraMarcador === 'fino' ? 3.5 : 5.5
   const rX = W * 0.22   // canto inferior esquerdo
   const tipH = 28        // altura da pontinha que fica visível abaixo do caderno
 
@@ -811,7 +811,7 @@ function FaceFrente({ W, H, corCapa, materialCapa, estampaCapa,
             points={`${rX + rW + 0.8},${H} ${rX + rW * 2 + 0.8},${H} ${rX + rW * 1.5 + 0.8},${H + tipH}`}
             fill="rgba(0,0,0,0.18)"/>
           {/* fitilho: V-cut triangular */}
-          {(tipoMarcador === 'fitilho' || !tipoMarcador) && (
+          {(tipoMarcador === 'fita-cetim' || tipoMarcador === 'fitilho' || !tipoMarcador) && (
             <>
               <polygon points={`${rX},${H} ${rX + rW},${H} ${rX + rW/2},${H + tipH}`} fill={corMarcador}/>
               <polygon points={`${rX + rW*0.18},${H} ${rX + rW*0.42},${H} ${rX + rW/2},${H + tipH*0.35}`}
@@ -833,7 +833,7 @@ function FaceFrente({ W, H, corCapa, materialCapa, estampaCapa,
             </>
           )}
           {/* cordão: círculo/oval representando o cabo do cordão */}
-          {tipoMarcador === 'cordao' && (
+          {(tipoMarcador === 'cordao-cetim' || tipoMarcador === 'cordao') && (
             <>
               <line x1={rX + rW/2} y1={H} x2={rX + rW/2} y2={H + tipH - 4}
                 stroke={corMarcador} strokeWidth={rW * 0.55} strokeLinecap="round"/>
@@ -906,6 +906,29 @@ function FaceFrente({ W, H, corCapa, materialCapa, estampaCapa,
             fill="rgba(0,0,0,0.10)"/>
         </g>
       )}
+
+      {/* Cantoneiras metálicas */}
+      {tipoCantoneiras !== 'sem-cantoneiras' && tipoCantoneiras && (() => {
+        const s = 14 // tamanho do triângulo
+        const metalFill = tipoCantoneiras === 'douradas' ? '#C8A96E' : tipoCantoneiras === 'prateadas' ? '#B8B8C0' : '#8B7355'
+        const metalGlow = tipoCantoneiras === 'douradas' ? 'rgba(255,215,100,0.5)' : tipoCantoneiras === 'prateadas' ? 'rgba(200,200,220,0.5)' : 'rgba(180,160,120,0.4)'
+        return (
+          <g>
+            {/* Superior esquerdo */}
+            <polygon points={`0,0 ${s},0 0,${s}`} fill={metalFill}/>
+            <line x1={2} y1={0} x2={0} y2={2} stroke={metalGlow} strokeWidth="1.5"/>
+            {/* Superior direito */}
+            <polygon points={`${W},0 ${W-s},0 ${W},${s}`} fill={metalFill}/>
+            <line x1={W-2} y1={0} x2={W} y2={2} stroke={metalGlow} strokeWidth="1.5"/>
+            {/* Inferior esquerdo */}
+            <polygon points={`0,${H} ${s},${H} 0,${H-s}`} fill={metalFill}/>
+            <line x1={2} y1={H} x2={0} y2={H-2} stroke={metalGlow} strokeWidth="1.5"/>
+            {/* Inferior direito */}
+            <polygon points={`${W},${H} ${W-s},${H} ${W},${H-s}`} fill={metalFill}/>
+            <line x1={W-2} y1={H} x2={W} y2={H-2} stroke={metalGlow} strokeWidth="1.5"/>
+          </g>
+        )
+      })()}
 
       {/* Gravação */}
       <GravacaoCapa texto={nomeGravado ?? ''} tipo={gravacaoCapa ?? 'nenhuma'}
@@ -1184,7 +1207,7 @@ function Livro3D({ bW, bH, bD, props }: {
     pinturaBordasAtiva: boolean; corPinturaBordas: string
     tipoCorteEspecial: string
     corInternaFolhas: string; corBordado: string; tipoTipografia: string
-    tipoTextura: string; tipoLaminacao: string; abasOrelhas: boolean
+    tipoTextura: string; tipoLaminacao: string; abasOrelhas: boolean; tipoCantoneiras: string
   }
 }) {
   const { corCapa, materialCapa, estampaCapa, gravacaoCapa, nomeGravado, posicaoGravacao,
@@ -1192,7 +1215,7 @@ function Livro3D({ bW, bH, bD, props }: {
     elasticoAtivo, corElastico, posicaoElastico, marcadorAtivo, tipoMarcador, corMarcador, larguraMarcador,
     portaCaneta, pinturaBordasAtiva, corPinturaBordas, tipoCorteEspecial,
     corInternaFolhas, corBordado, tipoTipografia,
-    tipoTextura, tipoLaminacao, abasOrelhas } = props
+    tipoTextura, tipoLaminacao, abasOrelhas, tipoCantoneiras } = props
 
   const face: React.CSSProperties = { position: 'absolute', overflow: 'hidden' }
   const faceOpen: React.CSSProperties = { position: 'absolute', overflow: 'visible' }
@@ -1213,7 +1236,8 @@ function Livro3D({ bW, bH, bD, props }: {
           portaCaneta={portaCaneta}
           pinturaBordasAtiva={pinturaBordasAtiva} corPinturaBordas={corPinturaBordas}
           corBordado={corBordado} tipoTipografia={tipoTipografia}
-          tipoTextura={tipoTextura} tipoLaminacao={tipoLaminacao} abasOrelhas={abasOrelhas}/>
+          tipoTextura={tipoTextura} tipoLaminacao={tipoLaminacao} abasOrelhas={abasOrelhas}
+          tipoCantoneiras={tipoCantoneiras}/>
       </div>
 
       {/* VERSO */}
@@ -1278,11 +1302,11 @@ export default function PreviewCaderno() {
     elasticoAtivo, corElastico, posicaoElastico,
     marcadorAtivo, tipoMarcador, corMarcador, larguraMarcador,
     bolsoInterno, portaCaneta, envelopeAcoplado, abasOrelhas,
-    tipoCantos, pinturaBordasAtiva, corPinturaBordas,
+    tipoCantos, tipoCantoneiras, pinturaBordasAtiva, corPinturaBordas,
     tipoCorteEspecial, tipoLaminacao, tipoTextura,
     padraoPaginas, corFolhas, tipoPapel,
-    materialGuarda, corGuarda, padraoGuarda,
-    paginaDedicatoria,
+    materialGuarda, corGuarda, padraoGuarda, padraoGuardaEstampado,
+    paginaDedicatoria, querPersonalizacaoCapa,
   } = configuracao
 
   const prop = PROPORCAO_POR_FORMATO[formato] ?? PROPORCAO_POR_FORMATO['retrato']
@@ -1301,12 +1325,28 @@ export default function PreviewCaderno() {
   const raioCanto = tipoCantos === 'arredondados' ? 8 : 2
   const corBordaPages = pinturaBordasAtiva ? corPinturaBordas : corInternaFolhas
 
+  // Escala visual por tamanho físico do caderno
+  const escalaTamanho: Record<string, number> = {
+    A6: 0.72, A5: 1.0, A4: 1.38, personalizado: 1.0,
+  }
+  const escala = escalaTamanho[tamanho] ?? 1.0
+
+  // Mapeia padraoGuardaEstampado (flores/poas/abstrata) → padrão SVG (floral/geometrico/aquarela)
+  const padraoGuardaEstampadoMap: Record<string, string> = {
+    flores: 'floral', poas: 'geometrico', abstrata: 'aquarela',
+  }
+  const padraoGuardaResolvido = materialGuarda === 'estampada'
+    ? (padraoGuardaEstampadoMap[padraoGuardaEstampado] ?? 'floral')
+    : (padraoGuarda ?? 'liso')
+
   const livroProps = {
-    corCapa, materialCapa, estampaCapa, gravacaoCapa, nomeGravado,
+    corCapa, materialCapa, estampaCapa,
+    gravacaoCapa: querPersonalizacaoCapa ? gravacaoCapa : 'nenhuma',
+    nomeGravado: querPersonalizacaoCapa ? nomeGravado : '',
     posicaoGravacao, aplicacoesCapa: aplicacoesCapa ?? [],
     raioCanto, tipoEncadernacao, tipoLombada, corFio,
     elasticoAtivo: elasticoAtivo ?? false, corElastico, posicaoElastico,
-    marcadorAtivo: marcadorAtivo ?? false, tipoMarcador: tipoMarcador ?? 'fitilho',
+    marcadorAtivo: marcadorAtivo ?? false, tipoMarcador: tipoMarcador ?? 'fita-cetim',
     corMarcador, larguraMarcador: larguraMarcador ?? 'medio',
     portaCaneta: portaCaneta ?? false,
     pinturaBordasAtiva: pinturaBordasAtiva ?? false, corPinturaBordas,
@@ -1315,6 +1355,7 @@ export default function PreviewCaderno() {
     tipoTextura: tipoTextura ?? 'granulada',
     tipoLaminacao: tipoLaminacao ?? 'nenhuma',
     abasOrelhas: abasOrelhas ?? false,
+    tipoCantoneiras: tipoCantoneiras ?? 'sem-cantoneiras',
   }
 
   const propsAberto = {
@@ -1325,7 +1366,7 @@ export default function PreviewCaderno() {
     pinturaBordasAtiva: pinturaBordasAtiva ?? false, corPinturaBordas,
     materialGuarda: materialGuarda ?? 'branca',
     corGuarda: corGuarda ?? '#F5F0E0',
-    padraoGuarda: padraoGuarda ?? 'liso',
+    padraoGuarda: padraoGuardaResolvido,
     bolsoInterno: bolsoInterno ?? false,
     tipoPapel: tipoPapel ?? 'offset',
     envelopeAcoplado: envelopeAcoplado ?? false,
@@ -1416,7 +1457,7 @@ export default function PreviewCaderno() {
               <div
                 ref={wrapRef}
                 className="touch-none"
-                style={{ padding: 40, cursor: 'grab' } as React.CSSProperties}
+                style={{ padding: 40, cursor: 'grab', transform: `scale(${escala})`, transformOrigin: 'center center' } as React.CSSProperties}
                 onPointerDown={onPDown}
                 onPointerMove={onPMove}
                 onPointerUp={onPUp}
