@@ -1009,9 +1009,9 @@ function FaceFrente({ W, H, corCapa, materialCapa, estampaCapa,
 }
 
 // ─── Face: Verso (contracapa) ─────────────────────────────────
-function FaceVerso({ W, H, corCapa, materialCapa, raioCanto, tipoTextura, tipoLaminacao, papelEspecialId }: {
+function FaceVerso({ W, H, corCapa, materialCapa, raioCanto, tipoTextura, tipoLaminacao, papelEspecialId, tipoCantoneiras }: {
   W: number; H: number; corCapa: string; materialCapa: string; raioCanto: number
-  tipoTextura: string; tipoLaminacao: string; papelEspecialId?: string
+  tipoTextura: string; tipoLaminacao: string; papelEspecialId?: string; tipoCantoneiras?: string
 }) {
   const ehCouro = materialCapa === 'couro' || materialCapa === 'sintetico'
   const useGrain = tipoTextura === 'granulada' || (tipoTextura !== 'lisa' && ehCouro)
@@ -1077,6 +1077,26 @@ function FaceVerso({ W, H, corCapa, materialCapa, raioCanto, tipoTextura, tipoLa
       {tipoLaminacao === 'fosca' && (
         <rect width={W} height={H} rx={raioCanto} fill="rgba(240,236,232,0.13)" style={{ pointerEvents: 'none' }}/>
       )}
+      {/* Cantoneiras — lado esquerdo (oposto à lombada no verso) */}
+      {tipoCantoneiras && tipoCantoneiras !== 'nenhuma' && (() => {
+        const s = 14
+        const metalFill = tipoCantoneiras === 'metal-trabalhado' ? '#C8A96E'
+          : tipoCantoneiras === 'metal-simples' ? '#B8B8C0'
+          : '#C4A07A'
+        const metalGlow = tipoCantoneiras === 'metal-trabalhado' ? 'rgba(255,215,100,0.5)'
+          : tipoCantoneiras === 'metal-simples' ? 'rgba(200,200,220,0.5)'
+          : 'rgba(196,160,122,0.4)'
+        return (
+          <g>
+            {/* Superior esquerdo */}
+            <polygon points={`0,0 ${s},0 0,${s}`} fill={metalFill}/>
+            <line x1={2} y1={0} x2={0} y2={2} stroke={metalGlow} strokeWidth="1.5"/>
+            {/* Inferior esquerdo */}
+            <polygon points={`0,${H} ${s},${H} 0,${H-s}`} fill={metalFill}/>
+            <line x1={2} y1={H} x2={0} y2={H-2} stroke={metalGlow} strokeWidth="1.5"/>
+          </g>
+        )
+      })()}
       {/* Highlight aresta direita */}
       <line x1={W-2} y1={raioCanto} x2={W-2} y2={H-raioCanto}
         stroke="rgba(255,255,255,0.18)" strokeWidth="1.5"/>
@@ -1334,7 +1354,8 @@ function Livro3D({ bW, bH, bD, props }: {
       <div style={{ ...face, width: W, height: H, left: 0, top: 0,
         transform: `rotateY(180deg) translateZ(${D/2}px)`, backfaceVisibility: 'hidden' }}>
         <FaceVerso W={W} H={H} corCapa={corCapa} materialCapa={materialCapa} raioCanto={raioCanto}
-          tipoTextura={tipoTextura} tipoLaminacao={tipoLaminacao} papelEspecialId={papelEspecialId}/>
+          tipoTextura={tipoTextura} tipoLaminacao={tipoLaminacao} papelEspecialId={papelEspecialId}
+          tipoCantoneiras={tipoCantoneiras}/>
       </div>
 
       {/* LOMBADA (esquerda) */}
