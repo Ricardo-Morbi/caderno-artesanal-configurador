@@ -14,8 +14,9 @@ function CalculadoraValorHora({
   onAplicar: (v: number) => void
 }) {
   const [meta, setMeta] = useState(3000)
-  const [horas, setHoras] = useState(120)
-  const valorCalculado = horas > 0 ? Math.round((meta / horas) * 100) / 100 : 0
+  const [horasSemanais, setHorasSemanais] = useState(28)
+  const horasMensais = Math.round(horasSemanais * 4.33 * 10) / 10
+  const valorCalculado = horasMensais > 0 ? Math.round((meta / horasMensais) * 100) / 100 : 0
 
   return (
     <div className="bg-ouro-50 border border-ouro-200 p-4 mb-6">
@@ -38,19 +39,22 @@ function CalculadoraValorHora({
           </div>
         </div>
         <div className="flex items-center justify-between gap-3">
-          <label className="text-xs text-onix-600 font-sans">Horas trabalhadas por mes</label>
+          <label className="text-xs text-onix-600 font-sans">Horas trabalhadas por semana</label>
           <div className="flex items-center gap-1">
             <input
               type="number"
               min="1"
-              step="5"
-              value={horas}
-              onChange={e => setHoras(parseFloat(e.target.value) || 1)}
+              step="1"
+              value={horasSemanais}
+              onChange={e => setHorasSemanais(parseFloat(e.target.value) || 1)}
               className="w-24 border border-ivoire-400 bg-white px-2 py-1 text-xs text-onix-700 text-right outline-none focus:border-onix-400 font-sans"
             />
-            <span className="text-xs text-onix-400 font-sans">h</span>
+            <span className="text-xs text-onix-400 font-sans">h/sem</span>
           </div>
         </div>
+        <p className="text-[10px] text-onix-400 font-sans text-right">
+          = {horasMensais}h/mes ({horasSemanais}h × 4,33 semanas)
+        </p>
       </div>
       <div className="flex items-center justify-between">
         <div>
