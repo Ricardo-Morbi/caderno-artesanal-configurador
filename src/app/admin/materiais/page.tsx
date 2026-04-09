@@ -328,10 +328,11 @@ export default function PaginaMateriais() {
             </p>
           </Secao>
 
-          <Secao titulo="Margem de lucro">
-            <Campo label="Margem desejada" campo="margemLucro" valor={tabela.margemLucro} onChange={set} sufixo="%" step="1" />
+          <Secao titulo="Margens">
+            <Campo label="Margem de lucro" campo="margemLucro" valor={tabela.margemLucro} onChange={set} sufixo="%" step="1" />
+            <Campo label="Margem de investimento" campo="margemInvestimento" valor={tabela.margemInvestimento ?? 10} onChange={set} sufixo="%" step="1" />
             <p className="text-[10px] text-onix-400 font-sans py-2">
-              O preco final = (material + mao de obra + custo fixo) × (1 + margem%)
+              Margem de lucro = retorno sobre o trabalho. Margem de investimento = reserva para materiais, equipamentos e crescimento.
             </p>
           </Secao>
 
@@ -339,7 +340,8 @@ export default function PaginaMateriais() {
             <p className="text-[10px] tracking-widest uppercase font-sans text-onix-400 mb-3">Formula completa</p>
             <div className="space-y-1 text-xs text-onix-600 font-sans">
               <p>Custo material + Mao de obra + Custo fixo unitario = Custo total</p>
-              <p>Preco final = Custo total × (1 + {tabela.margemLucro}%) = Custo total × {(1 + tabela.margemLucro / 100).toFixed(2)}</p>
+              <p>Preco final = Custo total × (1 + {tabela.margemLucro}%) × (1 + {tabela.margemInvestimento ?? 10}%)</p>
+              <p className="text-onix-400">= Custo total × {((1 + tabela.margemLucro / 100) * (1 + (tabela.margemInvestimento ?? 10) / 100)).toFixed(3)}</p>
             </div>
           </div>
         </div>
