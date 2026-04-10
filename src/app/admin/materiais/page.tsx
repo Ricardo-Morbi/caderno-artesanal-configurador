@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from 'react'
 import type { TabelaPrecos } from '@/lib/calcularPreco'
-import { TABELA_PADRAO, detalharPreco } from '@/lib/calcularPreco'
+import { TABELA_PADRAO, MAT_DEFAULTS, detalharPreco } from '@/lib/calcularPreco'
 import type { ConfiguracaoCaderno } from '@/types/caderno'
 
 // Calculadora: meta de faturamento → valor hora
@@ -30,10 +30,7 @@ function CalculadoraValorHora({
           <div className="flex items-center gap-1">
             <span className="text-xs text-onix-400 font-sans">R$</span>
             <input
-              type="number"
-              min="0"
-              step="100"
-              value={meta}
+              type="number" min="0" step="100" value={meta}
               onChange={e => setMeta(parseFloat(e.target.value) || 0)}
               className="w-24 border border-ivoire-400 bg-white px-2 py-1 text-xs text-onix-700 text-right outline-none focus:border-onix-400 font-sans"
             />
@@ -43,10 +40,7 @@ function CalculadoraValorHora({
           <label className="text-xs text-onix-600 font-sans">Horas trabalhadas por semana</label>
           <div className="flex items-center gap-1">
             <input
-              type="number"
-              min="1"
-              step="1"
-              value={horasSemanais}
+              type="number" min="1" step="1" value={horasSemanais}
               onChange={e => setHorasSemanais(parseFloat(e.target.value) || 1)}
               className="w-24 border border-ivoire-400 bg-white px-2 py-1 text-xs text-onix-700 text-right outline-none focus:border-onix-400 font-sans"
             />
@@ -57,11 +51,7 @@ function CalculadoraValorHora({
           <label className="text-xs text-onix-600 font-sans">Semanas trabalhadas por mes</label>
           <div className="flex items-center gap-1">
             <input
-              type="number"
-              min="1"
-              max="5"
-              step="1"
-              value={semanasMes}
+              type="number" min="1" max="5" step="1" value={semanasMes}
               onChange={e => setSemanasMes(parseFloat(e.target.value) || 1)}
               className="w-24 border border-ivoire-400 bg-white px-2 py-1 text-xs text-onix-700 text-right outline-none focus:border-onix-400 font-sans"
             />
@@ -97,7 +87,6 @@ function CalculadoraValorHora({
 
 // Config de simulação (caderno médio padrão)
 const CONFIG_SIMULACAO: ConfiguracaoCaderno = {
-  // Miolo
   temaCaderno: 'sem-tema-1', temaPersonalizado: '', padraoPaginas: 'liso',
   paginaDedicatoria: false,
   datasImportantes: false, datasPersonalizadas: '', essenciaNoParapel: false,
@@ -108,7 +97,6 @@ const CONFIG_SIMULACAO: ConfiguracaoCaderno = {
   materialGuarda: 'branca', padraoGuardaEstampado: 'flores', corGuarda: '#F5F0E0', padraoGuarda: 'liso',
   tipoCorteEspecial: 'nenhum', tipoCantos: 'retos',
   pinturaBordasAtiva: false, corPinturaBordas: '#D4AF37',
-  // Capa
   materialCapa: 'couro', corCapa: '#6B4226',
   querPersonalizacaoCapa: false, nomeGravado: '', gravacaoCapa: 'nenhuma',
   tipoBordado: 'cor-unica', corBordado: '#F5DFA0',
@@ -124,40 +112,38 @@ const CONFIG_SIMULACAO: ConfiguracaoCaderno = {
   papelEspecialId: '',
   linhoId: '',
   pespontosAtivo: false,
-  // Legado
   impressoesInternas: false, divisoriasInternas: false,
   tipoLaminacao: 'nenhuma', tipoTextura: 'lisa', proposicaoCaderno: 'escrita-livre',
   corFolhas: 'branca',
 }
 
-type Aba = 'maoObra' | 'fixos' | 'simulador'
+type Aba = 'maoObra' | 'fixos' | 'materiais' | 'simulador'
 
 function R(v: number) {
   return `R$ ${v.toFixed(2).replace('.', ',')}`
 }
 
-function Campo({ label, campo, valor, onChange, sufixo = 'R$', step = '0.01' }: {
-  label: string
-  campo: string
-  valor: number
+function Campo({ label, campo, valor, onChange, sufixo = 'R$', step = '0.01', descricao }: {
+  label: string; campo: string; valor: number
   onChange: (campo: string, v: number) => void
-  sufixo?: string
-  step?: string
+  sufixo?: string; step?: string; descricao?: string
 }) {
   return (
-    <div className="flex items-center justify-between gap-3 py-1.5 border-b border-ivoire-200 last:border-0">
-      <label className="text-xs text-onix-600 font-sans flex-1">{label}</label>
-      <div className="flex items-center gap-1.5">
-        {sufixo === 'R$' && <span className="text-xs text-onix-400 font-sans">R$</span>}
-        <input
-          type="number"
-          min="0"
-          step={step}
-          value={valor}
-          onChange={e => onChange(campo, parseFloat(e.target.value) || 0)}
-          className="w-20 border border-ivoire-400 bg-white px-2 py-1 text-xs text-onix-700 text-right outline-none focus:border-onix-400 font-sans"
-        />
-        {sufixo !== 'R$' && <span className="text-xs text-onix-400 font-sans">{sufixo}</span>}
+    <div className="py-2 border-b border-ivoire-200 last:border-0">
+      <div className="flex items-center justify-between gap-3">
+        <div className="flex-1">
+          <label className="text-xs text-onix-600 font-sans">{label}</label>
+          {descricao && <p className="text-[10px] text-onix-400 font-sans mt-0.5">{descricao}</p>}
+        </div>
+        <div className="flex items-center gap-1.5 shrink-0">
+          {sufixo === 'R$' && <span className="text-xs text-onix-400 font-sans">R$</span>}
+          <input
+            type="number" min="0" step={step} value={valor}
+            onChange={e => onChange(campo, parseFloat(e.target.value) || 0)}
+            className="w-20 border border-ivoire-400 bg-white px-2 py-1 text-xs text-onix-700 text-right outline-none focus:border-onix-400 font-sans"
+          />
+          {sufixo !== 'R$' && <span className="text-xs text-onix-400 font-sans">{sufixo}</span>}
+        </div>
       </div>
     </div>
   )
@@ -174,6 +160,42 @@ function Secao({ titulo, children }: { titulo: string; children: React.ReactNode
   )
 }
 
+// Tabela de preview de custo por tamanho (read-only)
+function TabelaTamanhos({ titulo, valores }: {
+  titulo: string
+  valores: { A6: number; A5: number; A4: number }
+}) {
+  return (
+    <div className="flex items-center justify-between py-1.5 border-b border-ivoire-100 last:border-0">
+      <span className="text-[10px] text-onix-500 font-sans">{titulo}</span>
+      <div className="flex gap-4">
+        {([['A6', valores.A6], ['A5', valores.A5], ['A4', valores.A4]] as [string, number][]).map(([tam, val]) => (
+          <div key={tam} className="text-right">
+            <div className="text-[9px] text-onix-400 font-sans">{tam}</div>
+            <div className="text-xs text-onix-600 font-sans font-medium">{R(val)}</div>
+          </div>
+        ))}
+      </div>
+    </div>
+  )
+}
+
+// Calcula os custos derivados para preview no admin
+function calcPreviewMat(tabela: TabelaPrecos) {
+  const painelCouro = tabela.mat_couro_painel ?? MAT_DEFAULTS.couro_painel
+  const metroSint   = tabela.mat_sintetico_metro ?? MAT_DEFAULTS.sintetico_metro
+  const meioLinho   = tabela.mat_linho_meio_metro ?? MAT_DEFAULTS.linho_meio_metro
+  const m2Sint = metroSint / 1.40
+  const m2Linho = (meioLinho * 2) / 1.33
+  const w = 1.40
+  const r = (v: number) => Math.round(v * 100) / 100
+  return {
+    couro:    { A6: r(painelCouro), A5: r(painelCouro * 2), A4: r(painelCouro * 2) },
+    sintetico:{ A6: r(0.055 * m2Sint * w), A5: r(0.094 * m2Sint * w), A4: r(0.169 * m2Sint * w) },
+    linho:    { A6: r(0.055 * m2Linho * w), A5: r(0.094 * m2Linho * w), A4: r(0.169 * m2Linho * w) },
+  }
+}
+
 export default function PaginaMateriais() {
   const [tabela, setTabela] = useState<TabelaPrecos>(TABELA_PADRAO)
   const [abaAtiva, setAbaAtiva] = useState<Aba>('maoObra')
@@ -184,7 +206,11 @@ export default function PaginaMateriais() {
   useEffect(() => {
     fetch('/api/configuracoes-preco')
       .then(r => r.json())
-      .then(d => { setTabela(d); setCarregando(false) })
+      .then(d => {
+        // Garante que campos novos de material tenham os defaults se não existirem no banco
+        setTabela({ ...TABELA_PADRAO, ...d })
+        setCarregando(false)
+      })
       .catch(() => setCarregando(false))
   }, [])
 
@@ -220,15 +246,17 @@ export default function PaginaMateriais() {
   }
 
   const detalhe = detalharPreco(CONFIG_SIMULACAO, tabela)
+  const preview = calcPreviewMat(tabela)
 
   if (carregando) {
     return <div className="text-sm text-onix-400 py-20 text-center">Carregando configuracoes...</div>
   }
 
   const ABAS: { id: Aba; label: string }[] = [
-    { id: 'maoObra',    label: 'Mao de Obra' },
-    { id: 'fixos',      label: 'Custos Fixos' },
-    { id: 'simulador',  label: 'Simulador' },
+    { id: 'maoObra',   label: 'Mao de Obra' },
+    { id: 'fixos',     label: 'Custos Fixos' },
+    { id: 'materiais', label: 'Materiais' },
+    { id: 'simulador', label: 'Simulador' },
   ]
 
   return (
@@ -284,7 +312,6 @@ export default function PaginaMateriais() {
       {/* ── ABA: MAO DE OBRA ── */}
       {abaAtiva === 'maoObra' && (
         <div className="max-w-lg">
-          {/* Calculadora de valor hora pela meta */}
           <CalculadoraValorHora
             valorAtual={tabela.valorHoraArtesa}
             onAplicar={(v) => set('valorHoraArtesa', v)}
@@ -305,7 +332,7 @@ export default function PaginaMateriais() {
             <Campo label="Gravacao (baixo ou alto relevo)" campo="tempoExtra_gravacao" valor={tabela.tempoExtra_gravacao} onChange={set} sufixo="h" step="0.25" />
             <Campo label="Bordado" campo="tempoExtra_bordado" valor={tabela.tempoExtra_bordado} onChange={set} sufixo="h" step="0.25" />
             <Campo label="Bolso interno ou envelope" campo="tempoExtra_bolso" valor={tabela.tempoExtra_bolso} onChange={set} sufixo="h" step="0.25" />
-            <Campo label="Pintura bordas ou deckle" campo="tempoExtra_acabamento" valor={tabela.tempoExtra_acabamento} onChange={set} sufixo="h" step="0.25" />
+            <Campo label="Pintura bordas ou pespontos" campo="tempoExtra_acabamento" valor={tabela.tempoExtra_acabamento} onChange={set} sufixo="h" step="0.25" />
           </Secao>
 
           <div className="bg-ivoire-100 border border-ivoire-300 p-4 mt-4">
@@ -348,6 +375,127 @@ export default function PaginaMateriais() {
         </div>
       )}
 
+      {/* ── ABA: MATERIAIS ── */}
+      {abaAtiva === 'materiais' && (
+        <div className="max-w-2xl">
+          <div className="bg-ouro-50 border border-ouro-200 px-4 py-3 mb-6">
+            <p className="text-xs text-onix-600 font-sans leading-relaxed">
+              Insira o <strong>preco de compra do fornecedor</strong>. O sistema calcula automaticamente o custo por tamanho de caderno (A6, A5, A4) com base na area de cada capa e fator de perda de corte.
+            </p>
+          </div>
+
+          {/* Revestimentos da Capa */}
+          <Secao titulo="Revestimentos da Capa">
+            <Campo
+              label="Couro — preco do painel 25×36cm (Galeria Mats)"
+              campo="mat_couro_painel"
+              valor={tabela.mat_couro_painel ?? MAT_DEFAULTS.couro_painel}
+              onChange={set}
+              descricao="Painel Classe B (Blaze, Stoned, Wax Relax). 1 painel p/ A6, 2 paineis p/ A5 e A4."
+            />
+            <div className="bg-ivoire-50 px-3 py-2 mb-2">
+              <p className="text-[10px] text-onix-400 font-sans mb-1">Custo de material calculado por tamanho:</p>
+              <TabelaTamanhos titulo="Couro" valores={preview.couro} />
+            </div>
+
+            <Campo
+              label="Sintetico (courino) — preco por metro, 1,40m de largura (Escritex)"
+              campo="mat_sintetico_metro"
+              valor={tabela.mat_sintetico_metro ?? MAT_DEFAULTS.sintetico_metro}
+              onChange={set}
+              descricao="Courvin Cipatex ou equivalente. Rendimento ~10 capas A5 por metro."
+            />
+            <div className="bg-ivoire-50 px-3 py-2 mb-2">
+              <TabelaTamanhos titulo="Sintetico" valores={preview.sintetico} />
+            </div>
+
+            <Campo
+              label="Linho — preco por ½ metro, 1,33m de largura (Pitamello)"
+              campo="mat_linho_meio_metro"
+              valor={tabela.mat_linho_meio_metro ?? MAT_DEFAULTS.linho_meio_metro}
+              onChange={set}
+              descricao="Linho misto ou puro. Vendido por ½ metro na maioria dos fornecedores."
+            />
+            <div className="bg-ivoire-50 px-3 py-2">
+              <TabelaTamanhos titulo="Linho" valores={preview.linho} />
+            </div>
+          </Secao>
+
+          {/* Personalização */}
+          <Secao titulo="Personalizacao e Acabamentos">
+            <Campo
+              label="Gravacao / bordado — consumiveis base"
+              campo="mat_gravacao"
+              valor={tabela.mat_gravacao ?? MAT_DEFAULTS.gravacao}
+              onChange={set}
+              descricao="Inclui consumiveis de relevo (baixo/alto) ou linha DMC para bordado cor unica."
+            />
+            <Campo
+              label="Pespontos decorativos — linha encerada"
+              campo="mat_pespontos"
+              valor={tabela.mat_pespontos ?? MAT_DEFAULTS.pespontos}
+              onChange={set}
+              descricao="Linha encerada R$20/rolo 130m. Um pesponto consome ~50m de linha."
+            />
+          </Secao>
+
+          {/* Ferragens */}
+          <Secao titulo="Ferragens e Encadernacao">
+            <Campo
+              label="Wire-O — ferragem anel duplo metalico"
+              campo="mat_wire_o"
+              valor={tabela.mat_wire_o ?? MAT_DEFAULTS.wire_o}
+              onChange={set}
+              descricao="Custo por ferragem Wire-O. Varia por tamanho — use valor medio."
+            />
+            <div className="py-2 border-b border-ivoire-200">
+              <div className="flex items-center justify-between">
+                <div>
+                  <p className="text-xs text-onix-600 font-sans">Cantoneiras metal simples (×4)</p>
+                  <p className="text-[10px] text-onix-400 font-sans mt-0.5">Marwal — 100 unidades R$75,00 = R$0,75/un × 4</p>
+                </div>
+                <span className="text-xs text-onix-500 font-sans font-medium">{R(MAT_DEFAULTS.cantoneira_metal_simples)}</span>
+              </div>
+            </div>
+            <div className="py-2">
+              <div className="flex items-center justify-between">
+                <div>
+                  <p className="text-xs text-onix-600 font-sans">Cantoneiras metal trabalhado (×4)</p>
+                  <p className="text-[10px] text-onix-400 font-sans mt-0.5">Marwal — 100 unidades R$160,00 = R$1,60/un × 4</p>
+                </div>
+                <span className="text-xs text-onix-500 font-sans font-medium">{R(MAT_DEFAULTS.cantoneira_metal_trabalhado)}</span>
+              </div>
+            </div>
+          </Secao>
+
+          {/* Embalagem */}
+          <Secao titulo="Embalagem">
+            <Campo
+              label="Embalagem padrao — saquinho algodao cru"
+              campo="mat_embalagem_padrao"
+              valor={tabela.mat_embalagem_padrao ?? MAT_DEFAULTS.embalagem_padrao}
+              onChange={set}
+              descricao="Algodao cru 160g R$24,99/m × 1,60m larg. Saquinho 25×30cm = ~R$7,50 de tecido + costura."
+            />
+            <Campo
+              label="Embalagem presente — saquinho + caixa personalizada"
+              campo="mat_embalagem_presente"
+              valor={tabela.mat_embalagem_presente ?? MAT_DEFAULTS.embalagem_presente}
+              onChange={set}
+              descricao="Saquinho de algodao + caixa premium + papel de seda."
+            />
+          </Secao>
+
+          <div className="bg-ivoire-100 border border-ivoire-300 p-4">
+            <p className="text-[10px] tracking-widest uppercase font-sans text-onix-400 mb-2">Como os precos sao aplicados</p>
+            <p className="text-xs text-onix-600 font-sans leading-relaxed">
+              Os valores acima sao <strong>custos de material bruto</strong>. O preco final ao cliente inclui tambem: mao de obra + custos fixos + margens (configurados nas outras abas).<br /><br />
+              Atualizar quando receber nova nota fiscal do fornecedor.
+            </p>
+          </div>
+        </div>
+      )}
+
       {/* ── ABA: SIMULADOR ── */}
       {abaAtiva === 'simulador' && (
         <div className="max-w-md">
@@ -369,9 +517,7 @@ export default function PaginaMateriais() {
                 <span className="text-xs font-sans text-onix-700">{R(detalhe.custo_mao_obra)}</span>
               </div>
               <div className="flex justify-between items-center py-1.5">
-                <span className="text-xs text-onix-500 font-sans">
-                  Custo fixo por caderno
-                </span>
+                <span className="text-xs text-onix-500 font-sans">Custo fixo por caderno</span>
                 <span className="text-xs font-sans text-onix-700">{R(detalhe.custo_fixo)}</span>
               </div>
             </div>

@@ -3,7 +3,7 @@ import type { ConfiguracaoCaderno } from '@/types/caderno'
 // ============================================================
 // TABELA LOOKUP — CUSTO DO MIOLO (material bruto)
 // Preços calculados com base em fornecedores de Abril/2026
-// null = combinação não disponível
+// Fonte: FIBRA PAPÉIS
 // ============================================================
 
 type EspessuraMiolo = 'fino' | 'medio' | 'grosso'
@@ -51,26 +51,15 @@ const MIOLO_RECICLADO: Record<TamanhoMiolo, Record<EspessuraMiolo, number>> = {
 }
 
 // ============================================================
-// CUSTO DA CAPA por material e tamanho
-// Baseado em preços fornecedores Abril/2026
+// CUSTO DA CAPA — materiais fixos por tamanho
+// Papelão cinza 1,9mm: R$30,99/50fls A5 = R$0,62/folha A5
 // ============================================================
 
-// Papelão cinza base (front+back+margem): R$0,62/folha A5
 const BASE_CAPA: Record<TamanhoMiolo, number> = {
   A6: 2, A5: 4, A4: 7, especial: 5,
 }
 
-// Couro classe B (R$37,90/painel 25×36cm)
-const CAPA_COURO: Record<TamanhoMiolo, number> = {
-  A6: 19, A5: 43, A4: 78, especial: 56,
-}
-
-// Courvin/sintético (R$28,40/m, ~1,4m de largura)
-const CAPA_SINTETICO: Record<TamanhoMiolo, number> = {
-  A6: 10, A5: 20, A4: 30, especial: 22,
-}
-
-// Árbol (R$19,65/folha ~66×96cm)
+// Árbol (R$19,65/folha ~66×96cm) — calha de madeira relevo
 const CAPA_PAPEL_ARBOL: Record<TamanhoMiolo, number> = {
   A6: 1.50, A5: 3.15, A4: 5.75, especial: 4.15,
 }
@@ -80,53 +69,74 @@ const CAPA_PAPEL_STAR: Record<TamanhoMiolo, number> = {
   A6: 1.60, A5: 3.50, A4: 6.50, especial: 4.65,
 }
 
-// Vtex (R$43,31/folha 66×96cm)
-const CAPA_PAPEL_VTEX: Record<TamanhoMiolo, number> = {
-  A6: 3.15, A5: 6.95, A4: 12.65, especial: 9.10,
-}
-
-// Kraft (material básico, baixo custo)
+// Kraft (papelão kraft básico)
 const CAPA_KRAFT: Record<TamanhoMiolo, number> = {
   A6: 0.80, A5: 1.60, A4: 2.50, especial: 1.80,
 }
 
-// Linho (R$45–R$66/½m; média R$56/½m = R$112/m, ~1,4m largura = R$80/m²)
-const CAPA_LINHO: Record<TamanhoMiolo, number> = {
-  A6: 4, A5: 8, A4: 15, especial: 11,
+// ============================================================
+// CUSTOS DE MATERIAL — defaults derivados de fornecedores
+// Fonte: Galeria Mats, Escritex, Pitamello, Marwal (Abril/2026)
+// ============================================================
+
+// Defaults para quando TabelaPrecos não tem os campos de material
+export const MAT_DEFAULTS = {
+  couro_painel:        37.90,  // R$/painel 25×36cm — Galeria Mats Classe B
+  sintetico_metro:     28.40,  // R$/metro 1,40m larg — Courvin Cipatex (Escritex)
+  linho_meio_metro:    45.00,  // R$/½ metro 1,33m larg — Linho Misto (Pitamello)
+  gravacao:            25,     // Consumíveis gravação/bordado (base)
+  bordado_colorido_extra: 6.45, // Meada DMC adicional para bordado colorido
+  pespontos:           8,      // Linha encerada R$20/130m × ~50m de pespontos
+  wire_o:              9,      // Ferragem Wire-O
+  cantoneira_papel:    2,      // 4 cantos em papel
+  cantoneira_metal_simples:   3,    // 4 × R$0,75 — Marwal 100un=R$75
+  cantoneira_metal_trabalhado: 6.40, // 4 × R$1,60 — Marwal 100un=R$160
+  embalagem_padrao:    8,      // Saquinho algodão cru 160g R$24,99/m
+  embalagem_presente:  15,     // Saquinho + caixa personalizada
+}
+
+// Calcula custo de couro por tamanho a partir do preço do painel
+// A6: 1 painel (2 peças por painel 25×36) | A5/A4: 2 painéis | especial: 1,5 painéis
+function calcCapaCouro(painelPreco: number): Record<TamanhoMiolo, number> {
+  return {
+    A6:      Math.round(painelPreco * 1.0 * 100) / 100,
+    A5:      Math.round(painelPreco * 2.0 * 100) / 100,
+    A4:      Math.round(painelPreco * 2.0 * 100) / 100,
+    especial:Math.round(painelPreco * 1.5 * 100) / 100,
+  }
+}
+
+// Calcula custo de sintético por tamanho a partir do preço por metro (1,40m larg)
+// Fator de perda: 40% | Áreas: A6≈0,055m² A5≈0,094m² A4≈0,169m² especial≈0,110m²
+function calcCapaSintetico(metroPreco: number): Record<TamanhoMiolo, number> {
+  const m2 = metroPreco / 1.40
+  const w = 1.40
+  return {
+    A6:      Math.max(1, Math.round(0.055 * m2 * w * 100) / 100),
+    A5:      Math.max(1, Math.round(0.094 * m2 * w * 100) / 100),
+    A4:      Math.max(2, Math.round(0.169 * m2 * w * 100) / 100),
+    especial:Math.max(1, Math.round(0.110 * m2 * w * 100) / 100),
+  }
+}
+
+// Calcula custo de linho por tamanho a partir do preço por ½ metro (1,33m larg)
+function calcCapaLinho(meioMetroPreco: number): Record<TamanhoMiolo, number> {
+  const m2 = (meioMetroPreco * 2) / 1.33
+  const w = 1.40
+  return {
+    A6:      Math.max(1, Math.round(0.055 * m2 * w * 100) / 100),
+    A5:      Math.max(2, Math.round(0.094 * m2 * w * 100) / 100),
+    A4:      Math.max(4, Math.round(0.169 * m2 * w * 100) / 100),
+    especial:Math.max(2, Math.round(0.110 * m2 * w * 100) / 100),
+  }
 }
 
 // ============================================================
-// UTILITÁRIOS
-// ============================================================
-
-function tamanhoChave(tamanho: string): TamanhoMiolo {
-  if (tamanho === 'A6') return 'A6'
-  if (tamanho === 'A5') return 'A5'
-  if (tamanho === 'A4') return 'A4'
-  return 'especial'
-}
-
-function folhasColoridas(espessura: string): number {
-  if (espessura === 'fino') return 5
-  if (espessura === 'medio') return 7
-  return 10 // grosso
-}
-
-// Detecta subtipo do papel especial pela cor escolhida
-function subtipoCapaEspecial(corCapa: string): 'arbol' | 'star' | 'vtex' {
-  // VTEX: camel #C19A6B, mostarda #E3A020, chocolate #3D1C02
-  if (['#c19a6b', '#e3a020', '#3d1c02'].includes(corCapa.toLowerCase())) return 'vtex'
-  // Árbol: caramelo #C07848, bege #D4B896
-  if (['#c07848', '#d4b896'].includes(corCapa.toLowerCase())) return 'arbol'
-  // Star é o restante do papel especial
-  return 'star'
-}
-
-// ============================================================
-// INTERFACES (mantidas para compatibilidade com admin)
+// INTERFACES
 // ============================================================
 
 export interface TabelaPrecos {
+  // Mão de obra
   valorHoraArtesa: number
   tempo_fino: number
   tempo_medio: number
@@ -136,9 +146,19 @@ export interface TabelaPrecos {
   tempoExtra_bordado: number
   tempoExtra_bolso: number
   tempoExtra_acabamento: number
+  // Custos fixos e margens
   custoFixoUnitario: number
   margemLucro: number
   margemInvestimento: number
+  // Custos de material (editáveis no admin — derivam preços por tamanho)
+  mat_couro_painel: number        // R$/painel 25×36cm (Galeria Mats)
+  mat_sintetico_metro: number     // R$/metro 1,40m larg (Courvin Cipatex)
+  mat_linho_meio_metro: number    // R$/½ metro 1,33m larg (Pitamello)
+  mat_gravacao: number            // custo consumíveis de gravação/bordado base
+  mat_pespontos: number           // custo material pespontos
+  mat_wire_o: number              // custo ferragem Wire-O
+  mat_embalagem_padrao: number    // embalagem saquinho padrão
+  mat_embalagem_presente: number  // embalagem presente (saquinho + caixa)
 }
 
 export const TABELA_PADRAO: TabelaPrecos = {
@@ -154,27 +174,82 @@ export const TABELA_PADRAO: TabelaPrecos = {
   custoFixoUnitario: 25,
   margemLucro: 50,
   margemInvestimento: 10,
+  // Custos de material (fornecedores Abril/2026)
+  mat_couro_painel:        MAT_DEFAULTS.couro_painel,
+  mat_sintetico_metro:     MAT_DEFAULTS.sintetico_metro,
+  mat_linho_meio_metro:    MAT_DEFAULTS.linho_meio_metro,
+  mat_gravacao:            MAT_DEFAULTS.gravacao,
+  mat_pespontos:           MAT_DEFAULTS.pespontos,
+  mat_wire_o:              MAT_DEFAULTS.wire_o,
+  mat_embalagem_padrao:    MAT_DEFAULTS.embalagem_padrao,
+  mat_embalagem_presente:  MAT_DEFAULTS.embalagem_presente,
 }
 
 // ============================================================
-// FUNÇÃO DE CÁLCULO — tabelas lookup de custo de material
+// UTILITÁRIOS
 // ============================================================
 
-export function calcularPreco(c: ConfiguracaoCaderno, _t?: TabelaPrecos): number {
+function tamanhoChave(tamanho: string): TamanhoMiolo {
+  if (tamanho === 'A6') return 'A6'
+  if (tamanho === 'A5') return 'A5'
+  if (tamanho === 'A4') return 'A4'
+  return 'especial'
+}
+
+function qtdFolhasColoridas(espessura: string): number {
+  if (espessura === 'fino') return 5
+  if (espessura === 'medio') return 7
+  return 10
+}
+
+// Detecta subtipo do papel especial pelo papelEspecialId
+// Papel-5 (Verde Esmeralda) e Papel-6 (Prata) → Star Coat (metalizado/vinílico)
+// Demais (relevo madeira) → Árbol
+function subtipoCapaEspecial(papelEspecialId: string): 'arbol' | 'star' {
+  if (['Papel-5', 'Papel-6'].includes(papelEspecialId)) return 'star'
+  return 'arbol'
+}
+
+// Extrai todos os custos de material da tabela (com fallback nos defaults)
+function getCustosMat(t?: TabelaPrecos) {
+  const couroPanel  = t?.mat_couro_painel        ?? MAT_DEFAULTS.couro_painel
+  const sintMet     = t?.mat_sintetico_metro      ?? MAT_DEFAULTS.sintetico_metro
+  const linhMeio    = t?.mat_linho_meio_metro     ?? MAT_DEFAULTS.linho_meio_metro
+  return {
+    couro:    calcCapaCouro(couroPanel),
+    sintetico:calcCapaSintetico(sintMet),
+    linho:    calcCapaLinho(linhMeio),
+    gravacao:          t?.mat_gravacao            ?? MAT_DEFAULTS.gravacao,
+    bordadoColoridoExtra: MAT_DEFAULTS.bordado_colorido_extra,
+    pespontos:         t?.mat_pespontos           ?? MAT_DEFAULTS.pespontos,
+    wire_o:            t?.mat_wire_o              ?? MAT_DEFAULTS.wire_o,
+    cantoneira_papel:             MAT_DEFAULTS.cantoneira_papel,
+    cantoneira_metal_simples:     MAT_DEFAULTS.cantoneira_metal_simples,
+    cantoneira_metal_trabalhado:  MAT_DEFAULTS.cantoneira_metal_trabalhado,
+    embalagem_padrao:  t?.mat_embalagem_padrao    ?? MAT_DEFAULTS.embalagem_padrao,
+    embalagem_presente:t?.mat_embalagem_presente  ?? MAT_DEFAULTS.embalagem_presente,
+  }
+}
+
+// ============================================================
+// calcularPreco — custo total de material
+// Baseado EXCLUSIVAMENTE em campos presentes nas perguntas
+// ============================================================
+
+export function calcularPreco(c: ConfiguracaoCaderno, t?: TabelaPrecos): number {
   const tam = tamanhoChave(c.tamanho)
   const esp = c.espessura as EspessuraMiolo
+  const mat = getCustosMat(t)
 
-  // ── 1. Miolo ─────────────────────────────────────────────────
   let custo = 0
 
-  // Custo base do miolo (papel)
+  // ── 1. Miolo ─────────────────────────────────────────────────
+
+  // Papel do miolo
   if (c.tipoPapel === 'offset') {
-    const gram = c.graturaPapel === '80g' ? '90g' : c.graturaPapel // fallback
+    const gram = c.graturaPapel === '80g' ? '90g' : c.graturaPapel
     const tabGram = MIOLO_OFFSET[gram as string]
-    if (tabGram) {
-      const val = tabGram[tam]?.[esp]
-      custo += val ?? 0
-    }
+    if (tabGram) custo += tabGram[tam]?.[esp] ?? 0
   } else if (c.tipoPapel === 'polen') {
     custo += MIOLO_POLEN[tam][esp]
   } else if (c.tipoPapel === 'reciclado') {
@@ -185,107 +260,97 @@ export function calcularPreco(c: ConfiguracaoCaderno, _t?: TabelaPrecos): number
   const nFolhas = c.espessura === 'fino' ? 40 : c.espessura === 'medio' ? 80 : 120
   const temImpressaoColorida = ['maternidade', 'casamento', 'viagens', 'gratidao', 'versatil'].includes(c.temaCaderno)
   const temImpressaoPB = ['sem-tema-2', 'planner', 'estudos'].includes(c.temaCaderno)
-  if (temImpressaoColorida) {
-    custo += nFolhas * 2 * 0.20
-  } else if (temImpressaoPB) {
-    custo += nFolhas * 2 * 0.05
-  }
+  if (temImpressaoColorida) custo += nFolhas * 2 * 0.20
+  else if (temImpressaoPB)  custo += nFolhas * 2 * 0.05
 
-  // Toques afetivos — R$15 cada (impressão + papel especial)
+  // Toques afetivos (pergunta extras-afetivos)
   if (c.paginaDedicatoria) custo += 15
-  if (c.datasImportantes) custo += 15
   if (c.essenciaNoParapel) custo += 15
 
-  // Folhas coloridas — R$0,50 por folha (5-10 conforme espessura)
-  if (c.folhasColoridas) {
-    custo += folhasColoridas(c.espessura) * 0.50
-  }
+  // Folhas coloridas intercaladas
+  if (c.folhasColoridas) custo += qtdFolhasColoridas(c.espessura) * 0.50
 
-  // Guarda — R$7 se não for branca (papel de guarda estampado ou colorido)
-  if (c.materialGuarda !== 'branca') custo += 7
-
-  // Corte Deckle Edge — R$5 (equipamento + tempo de material)
-  if (c.tipoCorteEspecial === 'deckle-edge') custo += 5
-
-  // Cantos arredondados — R$3 (ferramenta de canto)
+  // Cantos arredondados (pintura de bordas)
   if (c.tipoCantos === 'arredondados') custo += 3
 
-  // Pintura de bordas — R$8 (tinta + acabamento)
+  // Pintura de bordas das páginas
   if (c.pinturaBordasAtiva) custo += 8
 
   // ── 2. Capa ──────────────────────────────────────────────────
 
-  // Base: papelão cinza (varia por tamanho), cola PVA, consumíveis básicos
+  // Base: papelão cinza (varia por tamanho) + cola + consumíveis
   custo += BASE_CAPA[tam]
 
   // Material da capa
   if (c.materialCapa === 'couro') {
-    custo += CAPA_COURO[tam]
+    custo += mat.couro[tam]
   } else if (c.materialCapa === 'sintetico') {
-    custo += CAPA_SINTETICO[tam]
+    custo += mat.sintetico[tam]
   } else if (c.materialCapa === 'papel-especial') {
-    const sub = subtipoCapaEspecial(c.corCapa)
-    if (sub === 'arbol') custo += CAPA_PAPEL_ARBOL[tam]
-    else if (sub === 'vtex') custo += CAPA_PAPEL_VTEX[tam]
-    else custo += CAPA_PAPEL_STAR[tam]
+    const sub = subtipoCapaEspecial(c.papelEspecialId ?? '')
+    custo += sub === 'arbol' ? CAPA_PAPEL_ARBOL[tam] : CAPA_PAPEL_STAR[tam]
   } else if (c.materialCapa === 'kraft') {
     custo += CAPA_KRAFT[tam]
   } else if (c.materialCapa === 'linho') {
-    custo += CAPA_LINHO[tam]
+    custo += mat.linho[tam]
   }
 
-  // Pespontos — R$8 (linha encerada + consumíveis)
-  if (c.pespontosAtivo) custo += 8
+  // Lombada protegida — material extra para cobrir costura
+  if (c.tipoLombada === 'protegida')                  custo += 3
+  else if (c.tipoLombada === 'protegida-costura-aparente') custo += 4
 
-  // Personalização (qualquer tipo) — R$25 (consumíveis de gravação/bordado)
+  // Pespontos decorativos
+  if (c.pespontosAtivo) custo += mat.pespontos
+
+  // Personalização (gravação / bordado)
   if (c.querPersonalizacaoCapa && c.nomeGravado.trim().length > 0) {
-    custo += 25
+    custo += mat.gravacao
+    // Bordado colorido usa fio adicional (meada DMC extra)
+    if (c.gravacaoCapa === 'bordado' && c.tipoBordado === 'colorido') {
+      custo += mat.bordadoColoridoExtra
+    }
   }
 
-  // Aplicações extras — R$18 cada (material de aplicação)
-  custo += c.aplicacoesCapa.length * 18
+  // Cantoneiras (4 cantos)
+  if (c.tipoCantoneiras === 'papel')             custo += mat.cantoneira_papel
+  else if (c.tipoCantoneiras === 'metal-simples')    custo += mat.cantoneira_metal_simples
+  else if (c.tipoCantoneiras === 'metal-trabalhado') custo += mat.cantoneira_metal_trabalhado
 
-  // Cantoneiras — preços reais por peça (4 cantos)
-  if (c.tipoCantoneiras === 'papel') custo += 2
-  else if (c.tipoCantoneiras === 'metal-simples') custo += 3        // 4 × R$0,75
-  else if (c.tipoCantoneiras === 'metal-trabalhado') custo += 6.50  // 4 × R$1,60
+  // Encadernação / costura
+  if (c.tipoEncadernacao === 'wire-o') custo += mat.wire_o
+  else custo += 3  // linha encerada + agulha (~R$0,31/m × 2m + desgaste)
 
-  // Costura / encadernação
-  if (c.tipoEncadernacao === 'wire-o') custo += 9 // wire-o + ferragem
-  else custo += 3 // fio de encadernação + agulha (consumível)
-
-  // Elástico — R$0,50 (~60cm de elástico roliço R$0,31/m + fixação)
+  // Elástico de fechamento (~60cm elástico roliço 2mm: R$0,18)
   if (c.elasticoAtivo) custo += 0.50
 
-  // Marcador — R$0,50 por fitilho (40cm cetim 7mm R$0,149/m)
+  // Marcador de páginas (fita cetim 40cm)
   if (c.marcadorAtivo) {
     custo += 0.50
     if (Number(c.quantidadeMarcadores) >= 2) custo += 0.50
   }
 
-  // Elementos funcionais — custo de material por item
-  if (c.bolsoInterno) custo += 3         // papel + cola
-  if (c.envelopeAcoplado) custo += 4     // envelope kraft
+  // Elementos funcionais (pergunta extras-elementos)
+  if (c.bolsoInterno)       custo += 3   // papel + cola
   if (c.envelopeContracapa) custo += 4   // envelope kraft
-  if (c.portaCaneta) custo += 2          // elástico + fixação
-  if (c.abasOrelhas) custo += 3          // papel ou tecido
+  if (c.abasOrelhas)        custo += 3   // papel ou tecido
 
   // Embalagem
-  if (c.tipoEmbalagem === 'presente') custo += 15  // caixa presente + ribbon + tissue
-  else custo += 5                                   // caixa kraft padrão
+  if (c.tipoEmbalagem === 'presente') custo += mat.embalagem_presente
+  else                                custo += mat.embalagem_padrao
 
   return Math.round(custo * 100) / 100
 }
 
 // ============================================================
-// ITEMIZAÇÃO — custo de cada componente separado
+// itemizarPreco — breakdown por componente (ficha técnica)
 // ============================================================
 
 export interface ItemPreco { titulo: string; custo: number }
 
-export function itemizarPreco(c: ConfiguracaoCaderno): ItemPreco[] {
+export function itemizarPreco(c: ConfiguracaoCaderno, t?: TabelaPrecos): ItemPreco[] {
   const tam = tamanhoChave(c.tamanho)
   const esp = c.espessura as EspessuraMiolo
+  const mat = getCustosMat(t)
   const itens: ItemPreco[] = []
 
   // Miolo — papel
@@ -301,104 +366,101 @@ export function itemizarPreco(c: ConfiguracaoCaderno): ItemPreco[] {
   }
   itens.push({ titulo: `Papel miolo (${c.tipoPapel} ${c.graturaPapel})`, custo: custoMiolo })
 
-  // Impressão do miolo
+  // Impressão
   const nFolhas = c.espessura === 'fino' ? 40 : c.espessura === 'medio' ? 80 : 120
   const temImpressaoColorida = ['maternidade', 'casamento', 'viagens', 'gratidao', 'versatil'].includes(c.temaCaderno)
   const temImpressaoPB = ['sem-tema-2', 'planner', 'estudos'].includes(c.temaCaderno)
   if (temImpressaoColorida) itens.push({ titulo: 'Impressão colorida (miolo temático)', custo: nFolhas * 2 * 0.20 })
-  else if (temImpressaoPB) itens.push({ titulo: 'Impressão P&B (pautas/pontilhado)', custo: nFolhas * 2 * 0.05 })
+  else if (temImpressaoPB)  itens.push({ titulo: 'Impressão P&B (pautas/pontilhado)', custo: nFolhas * 2 * 0.05 })
 
   // Toques afetivos
   if (c.paginaDedicatoria) itens.push({ titulo: 'Página de dedicatória', custo: 15 })
-  if (c.datasImportantes)  itens.push({ titulo: 'Datas importantes', custo: 15 })
   if (c.essenciaNoParapel) itens.push({ titulo: 'Essência no papel', custo: 15 })
 
   // Folhas coloridas
-  if (c.folhasColoridas) itens.push({ titulo: 'Folhas coloridas', custo: folhasColoridas(c.espessura) * 0.50 })
+  if (c.folhasColoridas) itens.push({ titulo: 'Folhas coloridas intercaladas', custo: qtdFolhasColoridas(c.espessura) * 0.50 })
 
-  // Guarda
-  if (c.materialGuarda !== 'branca') itens.push({ titulo: 'Papel de guarda especial', custo: 7 })
-
-  // Corte e cantos
-  if (c.tipoCorteEspecial === 'deckle-edge') itens.push({ titulo: 'Corte deckle edge', custo: 5 })
+  // Acabamentos das páginas
   if (c.tipoCantos === 'arredondados') itens.push({ titulo: 'Cantos arredondados', custo: 3 })
   if (c.pinturaBordasAtiva) itens.push({ titulo: 'Pintura de bordas', custo: 8 })
 
   // Capa — base
-  itens.push({ titulo: 'Base de papelão (capa)', custo: BASE_CAPA[tam] })
-
-  // Pespontos
-  if (c.pespontosAtivo) itens.push({ titulo: 'Pespontos', custo: 8 })
+  itens.push({ titulo: 'Base papelão cinza (capa)', custo: BASE_CAPA[tam] })
 
   // Capa — material
   let custoCapaMat = 0
-  if (c.materialCapa === 'couro')          custoCapaMat = CAPA_COURO[tam]
-  else if (c.materialCapa === 'sintetico') custoCapaMat = CAPA_SINTETICO[tam]
+  if (c.materialCapa === 'couro')          custoCapaMat = mat.couro[tam]
+  else if (c.materialCapa === 'sintetico') custoCapaMat = mat.sintetico[tam]
   else if (c.materialCapa === 'papel-especial') {
-    const sub = subtipoCapaEspecial(c.corCapa)
-    custoCapaMat = sub === 'arbol' ? CAPA_PAPEL_ARBOL[tam] : sub === 'vtex' ? CAPA_PAPEL_VTEX[tam] : CAPA_PAPEL_STAR[tam]
+    const sub = subtipoCapaEspecial(c.papelEspecialId ?? '')
+    custoCapaMat = sub === 'arbol' ? CAPA_PAPEL_ARBOL[tam] : CAPA_PAPEL_STAR[tam]
   } else if (c.materialCapa === 'kraft')   custoCapaMat = CAPA_KRAFT[tam]
-  else if (c.materialCapa === 'linho')     custoCapaMat = CAPA_LINHO[tam]
+  else if (c.materialCapa === 'linho')     custoCapaMat = mat.linho[tam]
   itens.push({ titulo: `Material capa (${c.materialCapa})`, custo: custoCapaMat })
 
-  // Personalização
-  if (c.querPersonalizacaoCapa && c.nomeGravado.trim().length > 0)
-    itens.push({ titulo: `Gravação "${c.nomeGravado}"`, custo: 25 })
+  // Lombada
+  if (c.tipoLombada === 'protegida')                   itens.push({ titulo: 'Lombada protegida (material extra)', custo: 3 })
+  else if (c.tipoLombada === 'protegida-costura-aparente') itens.push({ titulo: 'Lombada protegida c/ costura aparente', custo: 4 })
 
-  // Aplicações
-  if (c.aplicacoesCapa.length > 0)
-    itens.push({ titulo: `Aplicações na capa (×${c.aplicacoesCapa.length})`, custo: c.aplicacoesCapa.length * 18 })
+  // Pespontos
+  if (c.pespontosAtivo) itens.push({ titulo: 'Pespontos decorativos', custo: mat.pespontos })
+
+  // Personalização
+  if (c.querPersonalizacaoCapa && c.nomeGravado.trim().length > 0) {
+    itens.push({ titulo: `Personalização "${c.nomeGravado}" (${c.gravacaoCapa})`, custo: mat.gravacao })
+    if (c.gravacaoCapa === 'bordado' && c.tipoBordado === 'colorido') {
+      itens.push({ titulo: 'Bordado colorido (fio extra DMC)', custo: mat.bordadoColoridoExtra })
+    }
+  }
 
   // Cantoneiras
-  if (c.tipoCantoneiras === 'papel')            itens.push({ titulo: 'Cantoneiras de papel', custo: 2 })
-  else if (c.tipoCantoneiras === 'metal-simples')   itens.push({ titulo: 'Cantoneiras metal simples', custo: 3 })
-  else if (c.tipoCantoneiras === 'metal-trabalhado') itens.push({ titulo: 'Cantoneiras metal trabalhado', custo: 6.50 })
+  if (c.tipoCantoneiras === 'papel')             itens.push({ titulo: 'Cantoneiras de papel', custo: mat.cantoneira_papel })
+  else if (c.tipoCantoneiras === 'metal-simples')    itens.push({ titulo: 'Cantoneiras metal simples (×4)', custo: mat.cantoneira_metal_simples })
+  else if (c.tipoCantoneiras === 'metal-trabalhado') itens.push({ titulo: 'Cantoneiras metal trabalhado (×4)', custo: mat.cantoneira_metal_trabalhado })
 
   // Encadernação
-  itens.push({ titulo: `Encadernação (${c.tipoEncadernacao})`, custo: c.tipoEncadernacao === 'wire-o' ? 9 : 3 })
+  itens.push({ titulo: `Encadernação (${c.tipoEncadernacao})`, custo: c.tipoEncadernacao === 'wire-o' ? mat.wire_o : 3 })
 
   // Elástico
-  if (c.elasticoAtivo) itens.push({ titulo: 'Elástico', custo: 0.50 })
+  if (c.elasticoAtivo) itens.push({ titulo: 'Elástico de fechamento', custo: 0.50 })
 
   // Marcador
   if (c.marcadorAtivo) {
     const qtd = Number(c.quantidadeMarcadores) >= 2 ? 2 : 1
-    itens.push({ titulo: `Marcador fitilho (×${qtd})`, custo: qtd * 0.50 })
+    itens.push({ titulo: `Marcador fitilho cetim (×${qtd})`, custo: qtd * 0.50 })
   }
 
   // Elementos funcionais
   if (c.bolsoInterno)       itens.push({ titulo: 'Bolso interno', custo: 3 })
-  if (c.envelopeAcoplado)   itens.push({ titulo: 'Envelope acoplado', custo: 4 })
-  if (c.envelopeContracapa) itens.push({ titulo: 'Envelope contracapa', custo: 4 })
-  if (c.portaCaneta)        itens.push({ titulo: 'Porta-caneta', custo: 2 })
-  if (c.abasOrelhas)        itens.push({ titulo: 'Abas/orelhas', custo: 3 })
+  if (c.envelopeContracapa) itens.push({ titulo: 'Envelope na contracapa', custo: 4 })
+  if (c.abasOrelhas)        itens.push({ titulo: 'Abas / orelhas', custo: 3 })
 
   // Embalagem
-  itens.push({ titulo: `Embalagem (${c.tipoEmbalagem === 'presente' ? 'presente' : 'padrão'})`, custo: c.tipoEmbalagem === 'presente' ? 15 : 5 })
+  const custEmb = c.tipoEmbalagem === 'presente' ? mat.embalagem_presente : mat.embalagem_padrao
+  itens.push({ titulo: `Embalagem (${c.tipoEmbalagem === 'presente' ? 'presente' : 'padrão'})`, custo: custEmb })
 
   return itens.filter(i => i.custo > 0)
 }
 
 // ============================================================
-// DETALHAMENTO DE PREÇO — agrega material + mão de obra + margens
+// detalharPreco — material + mão de obra + custos fixos + margens
 // ============================================================
 
 export function detalharPreco(c: ConfiguracaoCaderno, t: TabelaPrecos) {
-  const custo_material = calcularPreco(c)
+  const custo_material = calcularPreco(c, t)
 
-  // Horas de trabalho baseadas na espessura
   const tempoBase = (
-    c.espessura === 'fino'  ? t.tempo_fino  :
-    c.espessura === 'medio' ? t.tempo_medio :
-    c.espessura === 'grosso'? t.tempo_grosso :
+    c.espessura === 'fino'   ? t.tempo_fino   :
+    c.espessura === 'medio'  ? t.tempo_medio  :
+    c.espessura === 'grosso' ? t.tempo_grosso :
     t.tempo_extraGrosso
   )
 
   let tempoExtra = 0
   const temGravacao = c.gravacaoCapa && ['baixo-relevo', 'alto-relevo'].includes(c.gravacaoCapa)
   const temBordado  = c.gravacaoCapa === 'bordado'
-  const temBolso    = c.bolsoInterno || c.envelopeAcoplado || c.envelopeContracapa
-  const temAcab     = c.pinturaBordasAtiva || c.tipoCorteEspecial === 'deckle-edge' || c.pespontosAtivo
+  const temBolso    = c.bolsoInterno || c.envelopeContracapa
+  const temAcab     = c.pinturaBordasAtiva || c.pespontosAtivo
 
   if (temGravacao) tempoExtra += t.tempoExtra_gravacao
   if (temBordado)  tempoExtra += t.tempoExtra_bordado
