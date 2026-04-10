@@ -282,6 +282,106 @@ export function calcularPreco(c: ConfiguracaoCaderno, _t?: TabelaPrecos): number
 }
 
 // ============================================================
+// ITEMIZAÇÃO — custo de cada componente separado
+// ============================================================
+
+export interface ItemPreco { titulo: string; custo: number }
+
+export function itemizarPreco(c: ConfiguracaoCaderno): ItemPreco[] {
+  const tam = tamanhoChave(c.tamanho)
+  const esp = c.espessura as EspessuraMiolo
+  const itens: ItemPreco[] = []
+
+  // Miolo — papel
+  let custoMiolo = 0
+  if (c.tipoPapel === 'offset') {
+    const gram = c.graturaPapel === '80g' ? '90g' : c.graturaPapel
+    const tabGram = MIOLO_OFFSET[gram as string]
+    if (tabGram) custoMiolo = tabGram[tam]?.[esp] ?? 0
+  } else if (c.tipoPapel === 'polen') {
+    custoMiolo = MIOLO_POLEN[tam][esp]
+  } else if (c.tipoPapel === 'reciclado') {
+    custoMiolo = MIOLO_RECICLADO[tam][esp]
+  }
+  itens.push({ titulo: `Papel miolo (${c.tipoPapel} ${c.graturaPapel})`, custo: custoMiolo })
+
+  // Impressão do miolo
+  const nFolhas = c.espessura === 'fino' ? 40 : c.espessura === 'medio' ? 80 : 120
+  const temImpressaoColorida = ['maternidade', 'casamento', 'viagens', 'gratidao', 'versatil'].includes(c.temaCaderno)
+  const temImpressaoPB = ['sem-tema-2', 'planner', 'estudos'].includes(c.temaCaderno)
+  if (temImpressaoColorida) itens.push({ titulo: 'Impressão colorida (miolo temático)', custo: nFolhas * 2 * 0.20 })
+  else if (temImpressaoPB) itens.push({ titulo: 'Impressão P&B (pautas/pontilhado)', custo: nFolhas * 2 * 0.05 })
+
+  // Toques afetivos
+  if (c.paginaDedicatoria) itens.push({ titulo: 'Página de dedicatória', custo: 15 })
+  if (c.datasImportantes)  itens.push({ titulo: 'Datas importantes', custo: 15 })
+  if (c.essenciaNoParapel) itens.push({ titulo: 'Essência no papel', custo: 15 })
+
+  // Folhas coloridas
+  if (c.folhasColoridas) itens.push({ titulo: 'Folhas coloridas', custo: folhasColoridas(c.espessura) * 0.50 })
+
+  // Guarda
+  if (c.materialGuarda !== 'branca') itens.push({ titulo: 'Papel de guarda especial', custo: 7 })
+
+  // Corte e cantos
+  if (c.tipoCorteEspecial === 'deckle-edge') itens.push({ titulo: 'Corte deckle edge', custo: 5 })
+  if (c.tipoCantos === 'arredondados') itens.push({ titulo: 'Cantos arredondados', custo: 3 })
+  if (c.pinturaBordasAtiva) itens.push({ titulo: 'Pintura de bordas', custo: 8 })
+
+  // Capa — base
+  itens.push({ titulo: 'Base de papelão (capa)', custo: BASE_CAPA[tam] })
+
+  // Capa — material
+  let custoCapaMat = 0
+  if (c.materialCapa === 'couro')          custoCapaMat = CAPA_COURO[tam]
+  else if (c.materialCapa === 'sintetico') custoCapaMat = CAPA_SINTETICO[tam]
+  else if (c.materialCapa === 'tecido')    custoCapaMat = CAPA_TECIDO[tam]
+  else if (c.materialCapa === 'papel-especial') {
+    const sub = subtipoCapaEspecial(c.corCapa)
+    custoCapaMat = sub === 'arbol' ? CAPA_PAPEL_ARBOL[tam] : sub === 'vtex' ? CAPA_PAPEL_VTEX[tam] : CAPA_PAPEL_STAR[tam]
+  } else if (c.materialCapa === 'kraft')   custoCapaMat = CAPA_KRAFT[tam]
+  else if (c.materialCapa === 'linho')     custoCapaMat = CAPA_LINHO[tam]
+  itens.push({ titulo: `Material capa (${c.materialCapa})`, custo: custoCapaMat })
+
+  // Personalização
+  if (c.querPersonalizacaoCapa && c.nomeGravado.trim().length > 0)
+    itens.push({ titulo: `Gravação "${c.nomeGravado}"`, custo: 25 })
+
+  // Aplicações
+  if (c.aplicacoesCapa.length > 0)
+    itens.push({ titulo: `Aplicações na capa (×${c.aplicacoesCapa.length})`, custo: c.aplicacoesCapa.length * 18 })
+
+  // Cantoneiras
+  if (c.tipoCantoneiras === 'papel')            itens.push({ titulo: 'Cantoneiras de papel', custo: 2 })
+  else if (c.tipoCantoneiras === 'metal-simples')   itens.push({ titulo: 'Cantoneiras metal simples', custo: 3 })
+  else if (c.tipoCantoneiras === 'metal-trabalhado') itens.push({ titulo: 'Cantoneiras metal trabalhado', custo: 6.50 })
+
+  // Encadernação
+  itens.push({ titulo: `Encadernação (${c.tipoEncadernacao})`, custo: c.tipoEncadernacao === 'wire-o' ? 9 : 3 })
+
+  // Elástico
+  if (c.elasticoAtivo) itens.push({ titulo: 'Elástico', custo: 0.50 })
+
+  // Marcador
+  if (c.marcadorAtivo) {
+    const qtd = Number(c.quantidadeMarcadores) >= 2 ? 2 : 1
+    itens.push({ titulo: `Marcador fitilho (×${qtd})`, custo: qtd * 0.50 })
+  }
+
+  // Elementos funcionais
+  if (c.bolsoInterno)       itens.push({ titulo: 'Bolso interno', custo: 3 })
+  if (c.envelopeAcoplado)   itens.push({ titulo: 'Envelope acoplado', custo: 4 })
+  if (c.envelopeContracapa) itens.push({ titulo: 'Envelope contracapa', custo: 4 })
+  if (c.portaCaneta)        itens.push({ titulo: 'Porta-caneta', custo: 2 })
+  if (c.abasOrelhas)        itens.push({ titulo: 'Abas/orelhas', custo: 3 })
+
+  // Embalagem
+  itens.push({ titulo: `Embalagem (${c.tipoEmbalagem === 'presente' ? 'presente' : 'padrão'})`, custo: c.tipoEmbalagem === 'presente' ? 15 : 5 })
+
+  return itens.filter(i => i.custo > 0)
+}
+
+// ============================================================
 // DETALHAMENTO DE PREÇO — agrega material + mão de obra + margens
 // ============================================================
 

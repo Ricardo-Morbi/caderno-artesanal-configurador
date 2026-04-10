@@ -1,10 +1,12 @@
 'use client'
 
-import { useEffect } from 'react'
+import { useEffect, useState } from 'react'
 import type { Pedido } from '@/types/pedido'
 import type { ConfiguracaoCaderno } from '@/types/caderno'
 import type { StatusPedido } from '@/types/pedido'
 import { STATUS_LABELS, STATUS_COLUNAS } from '@/types/pedido'
+import type { TabelaPrecos } from '@/lib/calcularPreco'
+import { TABELA_PADRAO } from '@/lib/calcularPreco'
 import PreviewCadernoMini from './PreviewCadernoMini'
 import FichaTecnica from './FichaTecnica'
 
@@ -23,6 +25,14 @@ const COR_STATUS: Record<StatusPedido, string> = {
 
 export default function ModalPedido({ pedido, onFechar, onStatusChange }: Props) {
   const configuracao = pedido.configuracao as unknown as ConfiguracaoCaderno
+  const [tabela, setTabela] = useState<TabelaPrecos>(TABELA_PADRAO)
+
+  useEffect(() => {
+    fetch('/api/configuracoes-preco')
+      .then(r => r.json())
+      .then((d: TabelaPrecos) => setTabela(d))
+      .catch(() => {})
+  }, [])
 
   const data = new Date(pedido.criado_em)
   const dataStr = data.toLocaleDateString('pt-BR', {
@@ -125,7 +135,7 @@ export default function ModalPedido({ pedido, onFechar, onStatusChange }: Props)
               <div className="w-4 h-px bg-ouro-400" />
               <p className="text-xs tracking-widest uppercase font-sans text-onix-500">Ficha Técnica</p>
             </div>
-            <FichaTecnica c={configuracao} />
+            <FichaTecnica c={configuracao} t={tabela} />
           </div>
         </div>
       </div>

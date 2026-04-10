@@ -1,4 +1,6 @@
 import type { ConfiguracaoCaderno } from '@/types/caderno'
+import type { TabelaPrecos } from '@/lib/calcularPreco'
+import { itemizarPreco, detalharPreco, TABELA_PADRAO } from '@/lib/calcularPreco'
 
 const LABELS: Record<string, Record<string, string>> = {
   tamanho:          { A6:'A6', A5:'A5', A4:'A4', personalizado:'Personalizado' },
@@ -61,7 +63,14 @@ function Secao({ titulo, linhas }: { titulo: string; linhas: Linha[] }) {
   )
 }
 
-export default function FichaTecnica({ c }: { c: ConfiguracaoCaderno }) {
+function R(v: number) {
+  return `R$ ${v.toFixed(2).replace('.', ',')}`
+}
+
+export default function FichaTecnica({ c, t }: { c: ConfiguracaoCaderno; t?: TabelaPrecos }) {
+  const tabela = t ?? TABELA_PADRAO
+  const itens = itemizarPreco(c)
+  const detalhe = detalharPreco(c, tabela)
   return (
     <div className="divide-y divide-ivoire-300 space-y-0">
 
@@ -151,6 +160,60 @@ export default function FichaTecnica({ c }: { c: ConfiguracaoCaderno }) {
         <Secao titulo="Embalagem" linhas={[
           { titulo: 'Tipo', valor: label('tipoEmbalagem', c.tipoEmbalagem) },
         ]} />
+      </div>
+
+      {/* ── Precificação ── */}
+      <div className="pt-3">
+        <p className="text-[10px] tracking-widest uppercase font-sans text-onix-400 mb-1.5 mt-3">
+          Precificação
+        </p>
+
+        {/* Itens de material */}
+        <div className="space-y-0.5 mb-2">
+          {itens.map((item, i) => (
+            <div key={i} className="flex justify-between items-center gap-2">
+              <span className="text-xs text-onix-500 font-sans">{item.titulo}</span>
+              <span className="text-xs text-onix-600 font-sans tabular-nums">{R(item.custo)}</span>
+            </div>
+          ))}
+        </div>
+
+        {/* Subtotal material */}
+        <div className="border-t border-ivoire-300 pt-1.5 mt-1.5 space-y-1">
+          <div className="flex justify-between items-center gap-2">
+            <span className="text-xs text-onix-500 font-sans">Custo material</span>
+            <span className="text-xs font-medium text-onix-700 font-sans tabular-nums">{R(detalhe.custo_material)}</span>
+          </div>
+          <div className="flex justify-between items-center gap-2">
+            <span className="text-xs text-onix-500 font-sans">
+              Mão de obra ({detalhe.horas_trabalho}h × {R(tabela.valorHoraArtesa)}/h)
+            </span>
+            <span className="text-xs text-onix-600 font-sans tabular-nums">{R(detalhe.custo_mao_obra)}</span>
+          </div>
+          <div className="flex justify-between items-center gap-2">
+            <span className="text-xs text-onix-500 font-sans">Custo fixo</span>
+            <span className="text-xs text-onix-600 font-sans tabular-nums">{R(detalhe.custo_fixo)}</span>
+          </div>
+        </div>
+
+        {/* Total + margem + preço final */}
+        <div className="border-t border-ivoire-400 pt-1.5 mt-1.5 space-y-1">
+          <div className="flex justify-between items-center gap-2">
+            <span className="text-xs text-onix-600 font-sans font-medium">Custo total</span>
+            <span className="text-xs font-medium text-onix-700 font-sans tabular-nums">{R(detalhe.custo_total)}</span>
+          </div>
+          <div className="flex justify-between items-center gap-2">
+            <span className="text-xs text-onix-400 font-sans">
+              Margem ({tabela.margemLucro}% + {tabela.margemInvestimento}%)
+            </span>
+            <span className="text-xs text-green-700 font-sans tabular-nums">+{R(detalhe.margem_valor)}</span>
+          </div>
+        </div>
+
+        <div className="border-t-2 border-onix-700 pt-2 mt-1.5 flex justify-between items-center gap-2">
+          <span className="text-xs font-medium text-onix-700 font-sans tracking-wide">Preço ao cliente</span>
+          <span className="text-base font-serif text-onix-700">{R(detalhe.preco_final)}</span>
+        </div>
       </div>
 
     </div>
