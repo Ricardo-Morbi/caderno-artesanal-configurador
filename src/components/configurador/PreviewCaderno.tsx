@@ -773,7 +773,7 @@ function FaceFrente({ W, H, corCapa, materialCapa, estampaCapa,
   // Ribbon — só a pontinha saindo pela borda inferior, canto esquerdo
   const rW = larguraMarcador === '10mm' ? 8 : larguraMarcador === '7mm' ? 5.5 : larguraMarcador === 'largo' ? 8 : larguraMarcador === 'fino' ? 3.5 : 5.5
   const rX = W * 0.22   // canto inferior esquerdo
-  const tipH = 28        // altura da pontinha que fica visível abaixo do caderno
+  const tipH = H         // altura da pontinha igual à altura da frente do caderno
 
   return (
     <svg viewBox={`0 0 ${W} ${H}`} width="100%" height="100%" xmlns="http://www.w3.org/2000/svg"
@@ -1488,11 +1488,11 @@ function Livro3D({ bW, bH, bD, props }: {
   const W = bW, H = bH, D = bD
 
   return (
-    <div style={{ width: W, height: H, position: 'relative', transformStyle: 'preserve-3d' }}>
+    <div style={{ width: W, height: H, position: 'relative', transformStyle: 'preserve-3d', overflow: 'visible' }}>
 
       {/* FRENTE — overflow visible para ponta do marcador sair embaixo */}
       <div style={{ ...faceOpen, width: W, height: H, left: 0, top: 0,
-        transform: `translateZ(${D/2}px)`, backfaceVisibility: 'hidden' }}>
+        transform: `translateZ(${D/2}px)`, backfaceVisibility: 'hidden', overflow: 'visible' }}>
         <FaceFrente W={W} H={H} corCapa={corCapa} materialCapa={materialCapa}
           estampaCapa={estampaCapa} gravacaoCapa={gravacaoCapa} nomeGravado={nomeGravado}
           posicaoGravacao={posicaoGravacao} aplicacoesCapa={aplicacoesCapa}
