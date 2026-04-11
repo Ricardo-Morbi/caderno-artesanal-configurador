@@ -39,6 +39,10 @@ const PROPORCAO_POR_FORMATO: Record<string, { fL: number; fA: number }> = {
   paisagem: { fL: 1.4, fA: 1   },
   quadrado: { fL: 1,   fA: 1   },
 }
+const PROPORCAO_PERSONALIZADO: Record<string, { fL: number; fA: number }> = {
+  'quadrado-15x15': { fL: 1.0, fA: 1.0 },
+  'longer-10x25':   { fL: 0.4, fA: 1.0 },
+}
 
 // Espessura do livro em CSS px (para o box 3D)
 const ESPESSURA_CSS: Record<string, number> = {
@@ -261,7 +265,7 @@ function VistaAberto({
   marcadorAtivo, corMarcador, pinturaBordasAtiva, corPinturaBordas,
   materialGuarda, corGuarda, padraoGuarda, bolsoInterno,
   tipoPapel, envelopeAcoplado, paginaDedicatoria, paginaFoco,
-  folhasColoridas, corFolhasColoridas,
+  folhasColoridas, corFolhasColoridas, spread = 0,
 }: {
   larguraCapa: number; alturaCapa: number; espessuraLombada: number; raioCanto: number
   corCapa: string; corInternaFolhas: string; corBordaPages: string
@@ -271,7 +275,11 @@ function VistaAberto({
   tipoPapel: string; envelopeAcoplado: boolean; paginaDedicatoria: boolean
   paginaFoco: 'guarda' | 'miolo' | 'ambas'
   folhasColoridas?: boolean; corFolhasColoridas?: string
+  spread?: number
 }) {
+  // spread=0: guarda + primeira pg | spread=1: miolo-miolo | spread=2: última pg + guarda posterior
+  const isGuardaEsq = spread === 0    // página esq = guarda anterior
+  const isGuardaDir = spread === 2    // página dir = guarda posterior
   const margem = 24
   const lombadaVis = espessuraLombada * 0.7
   const pagLarg = larguraCapa * 0.82
@@ -374,39 +382,17 @@ function VistaAberto({
                 ))}
               </g>
             )}
-            {/* Página de dedicatória — moldura decorativa sobre a guarda */}
-            {paginaDedicatoria && (
-              <g>
-                <rect x={xEsq + pagLarg*0.09} y={yPag + pagAlt*0.09}
-                  width={pagLarg*0.82} height={pagAlt*0.82}
-                  rx={raioCanto*0.5} fill="none"
-                  stroke="rgba(160,130,90,0.38)" strokeWidth="0.8"/>
-                <rect x={xEsq + pagLarg*0.13} y={yPag + pagAlt*0.13}
-                  width={pagLarg*0.74} height={pagAlt*0.74}
-                  rx={raioCanto*0.3} fill="none"
-                  stroke="rgba(160,130,90,0.22)" strokeWidth="0.4" strokeDasharray="2 1.5"/>
-                {([
-                  [xEsq+pagLarg*0.09, yPag+pagAlt*0.09],
-                  [xEsq+pagLarg*0.91, yPag+pagAlt*0.09],
-                  [xEsq+pagLarg*0.09, yPag+pagAlt*0.91],
-                  [xEsq+pagLarg*0.91, yPag+pagAlt*0.91],
-                ] as [number,number][]).map(([cx,cy], i) => (
-                  <g key={i}>
-                    <circle cx={cx} cy={cy} r={2} fill="rgba(160,130,90,0.42)"/>
-                    <circle cx={cx} cy={cy} r={4} fill="none" stroke="rgba(160,130,90,0.22)" strokeWidth="0.5"/>
-                  </g>
-                ))}
-                <text x={xEsq + pagLarg*0.5} y={yPag + pagAlt*0.5}
-                  textAnchor="middle" dominantBaseline="middle"
-                  fontSize="5" fill="rgba(140,110,80,0.48)" fontFamily="Georgia, serif" letterSpacing="0.18em">
-                  dedicatória
-                </text>
-              </g>
-            )}
+            {/* Guarda — sem dedicatória (fica na primeira página) */}
             {marcadorAtivo && <rect x={xEsq+pagLarg*0.45} y={yPag} width={2} height={pagAlt+16} fill={corMarcador} rx={1} opacity={0.8}/>}
             {pinturaBordasAtiva && <rect x={xEsq+1} y={yPag+1} width={pagLarg-2} height={pagAlt-2} rx={raioCanto} fill="none" stroke={corPinturaBordas} strokeWidth={1.5} opacity={0.5}/>}
             <rect x={xEsq} y={yPag} width={pagLarg} height={pagAlt} rx={raioCanto} fill="url(#sombra-c)"/>
             <rect x={xEsq} y={yPag} width={pagLarg} height={pagAlt*0.35} rx={raioCanto} fill="url(#refl-p)"/>
+            {/* Label de identificação — guarda */}
+            <text x={xEsq + pagLarg*0.5} y={yPag + 7}
+              textAnchor="middle" dominantBaseline="middle"
+              fontSize="4" fill="rgba(160,130,90,0.45)" fontFamily="Georgia, serif" letterSpacing="0.2em">
+              GUARDA
+            </text>
           </>
         )
       })()}
@@ -426,11 +412,21 @@ function VistaAberto({
       <rect x={xDir+3} y={yPag+3} width={pagLarg} height={pagAlt} rx={raioCanto} fill="rgba(0,0,0,0.08)"/>
       <rect x={xDir} y={yPag} width={pagLarg} height={pagAlt} rx={raioCanto} fill={corBordaPages}/>
       <rect x={xDir} y={yPag} width={pagLarg} height={pagAlt} rx={raioCanto} fill={corInternaFolhas}/>
+      {/* No spread=2 (última folhada), página direita é guarda posterior */}
+      {isGuardaDir && (() => {
+        const corG = materialGuarda === 'colorida' ? corGuarda
+          : materialGuarda === 'kraft' ? '#C4A07A'
+          : materialGuarda === 'marmorizada' ? '#E8E4DF'
+          : corInternaFolhas
+        return <rect x={xDir} y={yPag} width={pagLarg} height={pagAlt} rx={raioCanto} fill={corG}/>
+      })()}
+      {!isGuardaDir && (
       <g transform={`translate(${xDir},${yPag})`}>
         {padraoPaginas === 'quadriculado'
           ? <rect width={pagLarg} height={pagAlt} fill="url(#grid-ab)" rx={raioCanto}/>
           : renderPadraoPaginaOffset(padraoPaginas, pagLarg, pagAlt)}
       </g>
+      )}
       {/* Textura de papel do miolo */}
       {tipoPapel === 'polen' && (
         <g transform={`translate(${xDir},${yPag})`}>
@@ -478,48 +474,45 @@ function VistaAberto({
           </g>
         )
       })()}
-      {/* Bolso interno — aba no canto inferior direito da página direita */}
-      {bolsoInterno && (
+      {/* Bolso e envelope ficam na contracapa (FaceVerso) — não na primeira página */}
+      {/* Página de dedicatória — moldura na primeira página do miolo */}
+      {paginaDedicatoria && (
         <g>
-          <rect x={xDir + pagLarg*0.08} y={yPag + pagAlt*0.72} width={pagLarg*0.84} height={pagAlt*0.26}
-            rx={raioCanto} fill={corInternaFolhas} stroke="rgba(150,130,110,0.45)" strokeWidth="0.8"/>
-          <rect x={xDir + pagLarg*0.08} y={yPag + pagAlt*0.72} width={pagLarg*0.84} height={4}
-            rx={raioCanto} fill="rgba(150,130,110,0.2)"/>
-          {/* Costura do bolso */}
-          <line x1={xDir + pagLarg*0.08} y1={yPag + pagAlt*0.72}
-                x2={xDir + pagLarg*0.92} y2={yPag + pagAlt*0.72}
-            stroke="rgba(150,130,110,0.6)" strokeWidth="0.6" strokeDasharray="2 1.5"/>
-          <text x={xDir + pagLarg*0.5} y={yPag + pagAlt*0.865}
+          <rect x={xDir + pagLarg*0.09} y={yPag + pagAlt*0.09}
+            width={pagLarg*0.82} height={pagAlt*0.82}
+            rx={raioCanto*0.5} fill="none"
+            stroke="rgba(160,130,90,0.38)" strokeWidth="0.8"/>
+          <rect x={xDir + pagLarg*0.13} y={yPag + pagAlt*0.13}
+            width={pagLarg*0.74} height={pagAlt*0.74}
+            rx={raioCanto*0.3} fill="none"
+            stroke="rgba(160,130,90,0.22)" strokeWidth="0.4" strokeDasharray="2 1.5"/>
+          {([
+            [xDir+pagLarg*0.09, yPag+pagAlt*0.09],
+            [xDir+pagLarg*0.91, yPag+pagAlt*0.09],
+            [xDir+pagLarg*0.09, yPag+pagAlt*0.91],
+            [xDir+pagLarg*0.91, yPag+pagAlt*0.91],
+          ] as [number,number][]).map(([cx,cy], i) => (
+            <g key={i}>
+              <circle cx={cx} cy={cy} r={2} fill="rgba(160,130,90,0.42)"/>
+              <circle cx={cx} cy={cy} r={4} fill="none" stroke="rgba(160,130,90,0.22)" strokeWidth="0.5"/>
+            </g>
+          ))}
+          <text x={xDir + pagLarg*0.5} y={yPag + pagAlt*0.5}
             textAnchor="middle" dominantBaseline="middle"
-            fontSize="5" fill="rgba(150,130,110,0.55)" fontFamily="Georgia, serif" letterSpacing="0.08em">
-            bolso
-          </text>
-        </g>
-      )}
-      {/* Envelope acoplado — bolso em forma de envelope na página direita */}
-      {envelopeAcoplado && (
-        <g>
-          <rect x={xDir + pagLarg*0.06} y={yPag + pagAlt*0.62}
-            width={pagLarg*0.88} height={pagAlt*0.35}
-            rx={raioCanto*0.5} fill="rgba(232,224,208,0.92)"
-            stroke="rgba(150,128,105,0.50)" strokeWidth="0.8"/>
-          {/* Aba triangular do envelope */}
-          <path d={`M ${xDir+pagLarg*0.06},${yPag+pagAlt*0.62} L ${xDir+pagLarg*0.5},${yPag+pagAlt*0.755} L ${xDir+pagLarg*0.94},${yPag+pagAlt*0.62} Z`}
-            fill="rgba(218,208,190,0.90)" stroke="rgba(150,128,105,0.38)" strokeWidth="0.6"/>
-          {/* Linha de dobra */}
-          <line x1={xDir+pagLarg*0.06} y1={yPag+pagAlt*0.62}
-                x2={xDir+pagLarg*0.94} y2={yPag+pagAlt*0.62}
-            stroke="rgba(150,128,105,0.45)" strokeWidth="0.5" strokeDasharray="2 1.5"/>
-          <text x={xDir + pagLarg*0.5} y={yPag + pagAlt*0.86}
-            textAnchor="middle" dominantBaseline="middle"
-            fontSize="4.5" fill="rgba(140,115,88,0.58)" fontFamily="Georgia, serif" letterSpacing="0.10em">
-            envelope
+            fontSize="5" fill="rgba(140,110,80,0.48)" fontFamily="Georgia, serif" letterSpacing="0.18em">
+            dedicatória
           </text>
         </g>
       )}
       {pinturaBordasAtiva && <rect x={xDir+1} y={yPag+1} width={pagLarg-2} height={pagAlt-2} rx={raioCanto} fill="none" stroke={corPinturaBordas} strokeWidth={1.5} opacity={0.5}/>}
       <rect x={xDir} y={yPag} width={pagLarg} height={pagAlt} rx={raioCanto} fill="url(#sombra-cd)"/>
       <rect x={xDir} y={yPag} width={pagLarg} height={pagAlt*0.35} rx={raioCanto} fill="url(#refl-p)"/>
+      {/* Label de identificação — primeira página */}
+      <text x={xDir + pagLarg*0.5} y={yPag + 7}
+        textAnchor="middle" dominantBaseline="middle"
+        fontSize="4" fill="rgba(130,110,80,0.38)" fontFamily="Georgia, serif" letterSpacing="0.2em">
+        1ª PÁGINA
+      </text>
 
       {/* ── Highlight de foco: ilumina a página relevante à pergunta atual ── */}
       {paginaFoco === 'guarda' && (
@@ -700,6 +693,42 @@ function Costura({ tipoEncadernacao, corFio, W, H }: {
             </g>
           )
         })}
+      </g>
+    )
+  }
+
+  // BELGA: costura com seções dobradas expostas — linhas curvas entre cadernos
+  if (tipoEncadernacao === 'belga') {
+    const sections = n(22)
+    const sH = (H - 10) / sections
+    return (
+      <g fill="none">
+        {/* Fundo das seções expostas */}
+        {Array.from({ length: sections }, (_, i) => {
+          const y0 = 5 + i * sH
+          return (
+            <rect key={`bg${i}`} x={W*0.15} y={y0} width={W*0.7} height={sH}
+              fill={i % 2 === 0 ? 'rgba(180,160,140,0.12)' : 'rgba(0,0,0,0)'}/>
+          )
+        })}
+        {/* Fio cruzado entre seções */}
+        {Array.from({ length: sections + 1 }, (_, i) => {
+          const y = 5 + i * sH
+          return (
+            <g key={i}>
+              <line x1={W*0.12} y1={y} x2={W*0.88} y2={y}
+                stroke={corFio} strokeWidth="1.1" strokeLinecap="round"/>
+              {/* Ponto central de ancoragem */}
+              <circle cx={W*0.5} cy={y} r="1.5" fill={corFio} stroke="none" opacity="0.85"/>
+              {/* Furos laterais */}
+              <circle cx={W*0.12} cy={y} r="1.2" fill={corFio} stroke="none" opacity="0.75"/>
+              <circle cx={W*0.88} cy={y} r="1.2" fill={corFio} stroke="none" opacity="0.75"/>
+            </g>
+          )
+        })}
+        {/* Fio vertical central (característica do belga) */}
+        <line x1={W*0.5} y1={5} x2={W*0.5} y2={H-5}
+          stroke={corFio} strokeWidth="0.8" strokeDasharray="3 3" opacity="0.55"/>
       </g>
     )
   }
@@ -926,9 +955,6 @@ function FaceFrente({ W, H, corCapa, materialCapa, estampaCapa,
               const x0 = rX + off
               return (
                 <g key={idx}>
-                  {/* Sombra */}
-                  <polygon points={`${x0+0.8},${H} ${x0+rW+0.8},${H} ${x0+rW+0.8},${H+tipH*0.55+0.8} ${x0+0.8},${H+tipH+0.8}`}
-                    fill="rgba(0,0,0,0.15)"/>
                   {/* fita-cetim: chanfrado — corte diagonal (lado direito mais curto) */}
                   {(tipoMarcador === 'fita-cetim' || tipoMarcador === 'fitilho' || !tipoMarcador) && (
                     <>
@@ -1373,9 +1399,10 @@ function FaceCorte({ W, H, corInternaFolhas, pinturaBordasAtiva, corPinturaBorda
 }
 
 // ─── Face: Topo e Base ────────────────────────────────────────
-function FaceTopo({ W, H, corInternaFolhas, pinturaBordasAtiva, corPinturaBordas }: {
+function FaceTopo({ W, H, corInternaFolhas, pinturaBordasAtiva, corPinturaBordas, elasticoAtivo, corElastico, posicaoElastico }: {
   W: number; H: number; corInternaFolhas: string
   pinturaBordasAtiva: boolean; corPinturaBordas: string
+  elasticoAtivo?: boolean; corElastico?: string; posicaoElastico?: string
 }) {
   const spacing = 0.55
   const total = Math.floor(W / spacing)
@@ -1420,6 +1447,12 @@ function FaceTopo({ W, H, corInternaFolhas, pinturaBordasAtiva, corPinturaBordas
           <rect width={W} height={H} fill="url(#sombra-topo)"/>
           <rect width={W} height={H} fill="url(#luz-topo)"/>
         </>
+      )}
+      {/* Elástico cruzando a face topo/base */}
+      {elasticoAtivo && corElastico && (
+        posicaoElastico === 'horizontal'
+          ? <rect x={0} y={H*0.28} width={W} height={H*0.12} fill={corElastico} opacity="0.85" rx="1"/>
+          : <rect x={W*0.68} y={0} width={W*0.1} height={H} fill={corElastico} opacity="0.85" rx="1"/>
       )}
     </svg>
   )
@@ -1504,14 +1537,16 @@ function Livro3D({ bW, bH, bD, props }: {
       <div style={{ ...face, width: W, height: D, left: 0, top: (H-D)/2,
         transform: `rotateX(90deg) translateZ(${H/2}px)`, backfaceVisibility: 'hidden' }}>
         <FaceTopo W={W} H={D} corInternaFolhas={corInternaFolhas}
-          pinturaBordasAtiva={pinturaBordasAtiva} corPinturaBordas={corPinturaBordas}/>
+          pinturaBordasAtiva={pinturaBordasAtiva} corPinturaBordas={corPinturaBordas}
+          elasticoAtivo={elasticoAtivo} corElastico={corElastico} posicaoElastico={posicaoElastico}/>
       </div>
 
       {/* BASE */}
       <div style={{ ...face, width: W, height: D, left: 0, top: (H-D)/2,
         transform: `rotateX(-90deg) translateZ(${H/2}px)`, backfaceVisibility: 'hidden' }}>
         <FaceTopo W={W} H={D} corInternaFolhas={corInternaFolhas}
-          pinturaBordasAtiva={pinturaBordasAtiva} corPinturaBordas={corPinturaBordas}/>
+          pinturaBordasAtiva={pinturaBordasAtiva} corPinturaBordas={corPinturaBordas}
+          elasticoAtivo={elasticoAtivo} corElastico={corElastico} posicaoElastico={posicaoElastico}/>
       </div>
     </div>
   )
@@ -1521,6 +1556,7 @@ function Livro3D({ bW, bH, bD, props }: {
 export default function PreviewCaderno() {
   const { configuracao, perguntaIndex } = useCadernoStore()
   const [modo, setModo] = useState<Modo>('fechado')
+  const [spread, setSpread] = useState(0) // 0=guarda+1ª pg | 1=miolo | 2=última pg+guarda
 
   // Identifica pergunta atual para auto-modo e foco de página
   const perguntasVisiveis = getPerguntasVisiveis(configuracao)
@@ -1554,7 +1590,7 @@ export default function PreviewCaderno() {
   useEffect(() => { modoRef.current = modo }, [modo])
 
   const {
-    tamanho, formato, espessura,
+    tamanho, subtamanhoPersonalizado, formato, espessura,
     corCapa, materialCapa, estampaCapa,
     gravacaoCapa, nomeGravado, posicaoGravacao, aplicacoesCapa,
     tipoTipografia, corBordado,
@@ -1571,7 +1607,9 @@ export default function PreviewCaderno() {
     folhasColoridas, corFolhasColoridas,
   } = configuracao
 
-  const prop = PROPORCAO_POR_FORMATO[formato] ?? PROPORCAO_POR_FORMATO['retrato']
+  const prop = tamanho === 'personalizado' && subtamanhoPersonalizado
+    ? (PROPORCAO_PERSONALIZADO[subtamanhoPersonalizado] ?? { fL: 1.0, fA: 1.4 })
+    : (PROPORCAO_POR_FORMATO[formato] ?? PROPORCAO_POR_FORMATO['retrato'])
   const bW = Math.round(175 * prop.fL)
   const bH = Math.round(175 * prop.fA)
   const bD = ESPESSURA_CSS[espessura] ?? 28
@@ -1641,6 +1679,7 @@ export default function PreviewCaderno() {
     paginaFoco: paginaFocoAtual,
     folhasColoridas: folhasColoridas ?? false,
     corFolhasColoridas: corFolhasColoridas ?? '#A8C5A0',
+    spread,
   }
 
   // Aplica rotação diretamente no DOM — sem passar pelo React
@@ -1792,6 +1831,33 @@ export default function PreviewCaderno() {
           background: 'radial-gradient(ellipse, rgba(20,15,10,0.28) 0%, transparent 70%)',
           filter: 'blur(5px)',
         }}/>
+      )}
+
+      {/* Controles de folhear — só visíveis no modo aberto */}
+      {modo === 'aberto' && (
+        <div className="flex items-center gap-3 mt-1">
+          <button
+            onClick={() => setSpread(s => Math.max(0, s - 1))}
+            disabled={spread === 0}
+            className="w-7 h-7 flex items-center justify-center rounded-full border border-ivoire-400 text-onix-500 disabled:opacity-25 hover:bg-ivoire-200 transition-colors"
+            aria-label="Página anterior">
+            <svg width="12" height="12" viewBox="0 0 12 12" fill="none">
+              <path d="M8 2L4 6l4 4" stroke="currentColor" strokeWidth="1.4" strokeLinecap="round"/>
+            </svg>
+          </button>
+          <span className="text-xs text-onix-500 font-serif tracking-widest min-w-[5rem] text-center">
+            {spread === 0 ? 'guarda · 1ª pg' : spread === 1 ? 'miolo' : 'última · guarda'}
+          </span>
+          <button
+            onClick={() => setSpread(s => Math.min(2, s + 1))}
+            disabled={spread === 2}
+            className="w-7 h-7 flex items-center justify-center rounded-full border border-ivoire-400 text-onix-500 disabled:opacity-25 hover:bg-ivoire-200 transition-colors"
+            aria-label="Próxima página">
+            <svg width="12" height="12" viewBox="0 0 12 12" fill="none">
+              <path d="M4 2l4 4-4 4" stroke="currentColor" strokeWidth="1.4" strokeLinecap="round"/>
+            </svg>
+          </button>
+        </div>
       )}
 
       {/* Dica de rotação — sempre visível, controlada via ref */}
