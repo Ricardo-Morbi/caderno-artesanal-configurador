@@ -238,109 +238,127 @@ function getCustosMat(t?: TabelaPrecos) {
 // Baseado EXCLUSIVAMENTE em campos presentes nas perguntas
 // ============================================================
 
-export function calcularPreco(c: ConfiguracaoCaderno, t?: TabelaPrecos): number {
+export function calcularPreco(c: ConfiguracaoCaderno, t?: TabelaPrecos, respondidas?: Set<string>): number {
   const tam = tamanhoChave(c.tamanho)
   const esp = c.espessura as EspessuraMiolo
   const mat = getCustosMat(t)
+  // Sem filtro: tudo é contabilizado (comportamento original para admin/ficha técnica)
+  const R = respondidas ?? null
 
   let custo = 0
 
   // ── 1. Miolo ─────────────────────────────────────────────────
 
-  // Papel do miolo
-  if (c.tipoPapel === 'offset') {
-    const gram = c.graturaPapel === '80g' ? '90g' : c.graturaPapel
-    const tabGram = MIOLO_OFFSET[gram as string]
-    if (tabGram) custo += tabGram[tam]?.[esp] ?? 0
-  } else if (c.tipoPapel === 'polen') {
-    custo += MIOLO_POLEN[tam][esp]
-  } else if (c.tipoPapel === 'reciclado') {
-    custo += MIOLO_RECICLADO[tam][esp]
+  // Papel do miolo — só conta se tipoPapel E graturaPapel foram respondidos
+  if (!R || (R.has('tipoPapel') && R.has('graturaPapel'))) {
+    if (c.tipoPapel === 'offset') {
+      const gram = c.graturaPapel === '80g' ? '90g' : c.graturaPapel
+      const tabGram = MIOLO_OFFSET[gram as string]
+      if (tabGram) custo += tabGram[tam]?.[esp] ?? 0
+    } else if (c.tipoPapel === 'polen') {
+      custo += MIOLO_POLEN[tam][esp]
+    } else if (c.tipoPapel === 'reciclado') {
+      custo += MIOLO_RECICLADO[tam][esp]
+    }
   }
 
-  // Impressão por folha (frente e verso = 2 impressões por folha)
-  const nFolhas = c.espessura === 'fino' ? 40 : c.espessura === 'medio' ? 80 : 120
-  const temImpressaoColorida = ['maternidade', 'casamento', 'viagens', 'gratidao', 'versatil'].includes(c.temaCaderno)
-  const temImpressaoPB = ['sem-tema-2', 'planner', 'estudos'].includes(c.temaCaderno)
-  if (temImpressaoColorida) custo += nFolhas * 2 * 0.20
-  else if (temImpressaoPB)  custo += nFolhas * 2 * 0.05
+  // Impressão por folha — só conta se temaCaderno foi respondido
+  if (!R || R.has('temaCaderno')) {
+    const nFolhas = c.espessura === 'fino' ? 40 : c.espessura === 'medio' ? 80 : 120
+    const temImpressaoColorida = ['maternidade', 'casamento', 'viagens', 'gratidao', 'versatil'].includes(c.temaCaderno)
+    const temImpressaoPB = ['sem-tema-2', 'planner', 'estudos'].includes(c.temaCaderno)
+    if (temImpressaoColorida) custo += nFolhas * 2 * 0.20
+    else if (temImpressaoPB)  custo += nFolhas * 2 * 0.05
+  }
 
-  // Toques afetivos (pergunta extras-afetivos)
-  if (c.paginaDedicatoria) custo += 15
-  if (c.essenciaNoParapel) custo += 15
+  // Toques afetivos — só se extras-afetivos foi respondido
+  if (!R || R.has('extras-afetivos')) {
+    if (c.paginaDedicatoria) custo += 15
+    if (c.essenciaNoParapel) custo += 15
+  }
 
-  // Folhas coloridas intercaladas
-  if (c.folhasColoridas) custo += qtdFolhasColoridas(c.espessura) * 0.50
+  // Folhas coloridas — só se folhasColoridas foi respondido
+  if ((!R || R.has('folhasColoridas')) && c.folhasColoridas) {
+    custo += qtdFolhasColoridas(c.espessura) * 0.50
+  }
 
-  // Cantos arredondados (pintura de bordas)
-  if (c.tipoCantos === 'arredondados') custo += 3
+  // Cantos arredondados — só se tipoCantos foi respondido
+  if ((!R || R.has('tipoCantos')) && c.tipoCantos === 'arredondados') custo += 3
 
-  // Pintura de bordas das páginas
-  if (c.pinturaBordasAtiva) custo += 8
+  // Pintura de bordas — só se pinturaBordasAtiva foi respondido
+  if ((!R || R.has('pinturaBordasAtiva')) && c.pinturaBordasAtiva) custo += 8
 
   // ── 2. Capa ──────────────────────────────────────────────────
 
-  // Base: papelão cinza (varia por tamanho) + cola + consumíveis
-  custo += BASE_CAPA[tam]
-
-  // Material da capa
-  if (c.materialCapa === 'couro') {
-    custo += mat.couro[tam]
-  } else if (c.materialCapa === 'sintetico') {
-    custo += mat.sintetico[tam]
-  } else if (c.materialCapa === 'papel-especial') {
-    const sub = subtipoCapaEspecial(c.papelEspecialId ?? '')
-    custo += sub === 'arbol' ? CAPA_PAPEL_ARBOL[tam] : CAPA_PAPEL_STAR[tam]
-  } else if (c.materialCapa === 'kraft') {
-    custo += CAPA_KRAFT[tam]
-  } else if (c.materialCapa === 'linho') {
-    custo += mat.linho[tam]
+  // Base + material da capa — só se materialCapa foi respondido
+  if (!R || R.has('materialCapa')) {
+    custo += BASE_CAPA[tam]
+    if (c.materialCapa === 'couro') {
+      custo += mat.couro[tam]
+    } else if (c.materialCapa === 'sintetico') {
+      custo += mat.sintetico[tam]
+    } else if (c.materialCapa === 'papel-especial') {
+      const sub = subtipoCapaEspecial(c.papelEspecialId ?? '')
+      custo += sub === 'arbol' ? CAPA_PAPEL_ARBOL[tam] : CAPA_PAPEL_STAR[tam]
+    } else if (c.materialCapa === 'kraft') {
+      custo += CAPA_KRAFT[tam]
+    } else if (c.materialCapa === 'linho') {
+      custo += mat.linho[tam]
+    }
   }
 
-  // Lombada protegida — material extra para cobrir costura
-  if (c.tipoLombada === 'protegida')                  custo += 3
-  else if (c.tipoLombada === 'protegida-costura-aparente') custo += 4
+  // Lombada protegida — só se tipoLombada foi respondido
+  if (!R || R.has('tipoLombada')) {
+    if (c.tipoLombada === 'protegida')                       custo += 3
+    else if (c.tipoLombada === 'protegida-costura-aparente') custo += 4
+  }
 
-  // Pespontos decorativos
-  if (c.pespontosAtivo) custo += mat.pespontos
+  // Pespontos — só se pespontosAtivo foi respondido
+  if ((!R || R.has('pespontosAtivo')) && c.pespontosAtivo) custo += mat.pespontos
 
-  // Personalização (gravação / bordado)
-  if (c.querPersonalizacaoCapa && c.nomeGravado.trim().length > 0) {
+  // Personalização — só se querPersonalizacaoCapa foi respondido
+  if ((!R || R.has('querPersonalizacaoCapa')) && c.querPersonalizacaoCapa && c.nomeGravado.trim().length > 0) {
     custo += mat.gravacao
-    // Foil (hot stamping) — folha dourada metalizada, custo extra
     if (c.gravacaoCapa === 'baixo-relevo-foil') custo += 12
-    // Bordado colorido usa fio adicional (meada DMC extra)
     if (c.gravacaoCapa === 'bordado' && c.tipoBordado === 'colorido') {
       custo += mat.bordadoColoridoExtra
     }
   }
 
-  // Cantoneiras (4 cantos)
-  if (c.tipoCantoneiras === 'papel')             custo += mat.cantoneira_papel
-  else if (c.tipoCantoneiras === 'metal-simples')    custo += mat.cantoneira_metal_simples
-  else if (c.tipoCantoneiras === 'metal-trabalhado') custo += mat.cantoneira_metal_trabalhado
+  // Cantoneiras — só se tipoCantoneiras foi respondido
+  if (!R || R.has('tipoCantoneiras')) {
+    if (c.tipoCantoneiras === 'papel')                custo += mat.cantoneira_papel
+    else if (c.tipoCantoneiras === 'metal-simples')   custo += mat.cantoneira_metal_simples
+    else if (c.tipoCantoneiras === 'metal-trabalhado') custo += mat.cantoneira_metal_trabalhado
+  }
 
-  // Encadernação / costura
-  if (c.tipoEncadernacao === 'wire-o') custo += mat.wire_o
-  else custo += 3  // linha encerada + agulha (~R$0,31/m × 2m + desgaste)
+  // Encadernação / costura — só se tipoEncadernacao foi respondido
+  if (!R || R.has('tipoEncadernacao')) {
+    if (c.tipoEncadernacao === 'wire-o') custo += mat.wire_o
+    else custo += 3  // linha encerada + agulha
+  }
 
-  // Elástico de fechamento (~60cm elástico roliço 2mm: R$0,18)
-  if (c.elasticoAtivo) custo += 0.50
+  // Elástico — só se elasticoAtivo foi respondido
+  if ((!R || R.has('elasticoAtivo')) && c.elasticoAtivo) custo += 0.50
 
-  // Marcador de páginas (fita cetim 40cm)
-  if (c.marcadorAtivo) {
+  // Marcador — só se marcadorAtivo foi respondido
+  if ((!R || R.has('marcadorAtivo')) && c.marcadorAtivo) {
     custo += 0.50
     if (Number(c.quantidadeMarcadores) >= 2) custo += 0.50
   }
 
-  // Elementos funcionais (pergunta extras-elementos)
-  if (c.bolsoInterno)       custo += 3   // papel + cola
-  if (c.envelopeContracapa) custo += 4   // envelope kraft
-  if (c.abasOrelhas)        custo += 3   // papel ou tecido
+  // Elementos funcionais — só se extras-elementos foi respondido
+  if (!R || R.has('extras-elementos')) {
+    if (c.bolsoInterno)       custo += 3
+    if (c.envelopeContracapa) custo += 4
+    if (c.abasOrelhas)        custo += 3
+  }
 
-  // Embalagem
-  if (c.tipoEmbalagem === 'presente') custo += mat.embalagem_presente
-  else                                custo += mat.embalagem_padrao
+  // Embalagem — só se tipoEmbalagem foi respondido
+  if (!R || R.has('tipoEmbalagem')) {
+    if (c.tipoEmbalagem === 'presente') custo += mat.embalagem_presente
+    else                                custo += mat.embalagem_padrao
+  }
 
   return Math.round(custo * 100) / 100
 }
@@ -450,36 +468,44 @@ export function itemizarPreco(c: ConfiguracaoCaderno, t?: TabelaPrecos): ItemPre
 // detalharPreco — material + mão de obra + custos fixos + margens
 // ============================================================
 
-export function detalharPreco(c: ConfiguracaoCaderno, t: TabelaPrecos) {
-  const custo_material = calcularPreco(c, t)
+export function detalharPreco(c: ConfiguracaoCaderno, t: TabelaPrecos, perguntasRespondidas?: string[]) {
+  const R = perguntasRespondidas ? new Set(perguntasRespondidas) : null
+  const custo_material = calcularPreco(c, t, R ?? undefined)
 
-  const tempoBase = (
-    c.espessura === 'fino'   ? t.tempo_fino   :
-    c.espessura === 'medio'  ? t.tempo_medio  :
-    c.espessura === 'grosso' ? t.tempo_grosso :
-    t.tempo_extraGrosso
-  )
+  // Mão de obra — só conta se espessura foi respondido pelo usuário
+  let tempoBase = 0
+  if (!R || R.has('espessura')) {
+    tempoBase = (
+      c.espessura === 'fino'   ? t.tempo_fino   :
+      c.espessura === 'medio'  ? t.tempo_medio  :
+      c.espessura === 'grosso' ? t.tempo_grosso :
+      t.tempo_extraGrosso
+    )
+  }
 
   let tempoExtra = 0
-  const temGravacao = c.gravacaoCapa && ['baixo-relevo', 'baixo-relevo-foil'].includes(c.gravacaoCapa)
-  const temBordado  = c.gravacaoCapa === 'bordado'
-  const temBolso    = c.bolsoInterno || c.envelopeContracapa
-  const temAcab     = c.pinturaBordasAtiva
-
-  if (temGravacao)       tempoExtra += t.tempoExtra_gravacao
-  if (temBordado)        tempoExtra += t.tempoExtra_bordado
-  if (c.pespontosAtivo)  tempoExtra += t.tempoExtra_pespontos
-  if (temBolso)          tempoExtra += t.tempoExtra_bolso
-  if (temAcab)           tempoExtra += t.tempoExtra_acabamento
+  if (!R || R.has('querPersonalizacaoCapa')) {
+    const temGravacao = c.gravacaoCapa && ['baixo-relevo', 'baixo-relevo-foil'].includes(c.gravacaoCapa)
+    const temBordado  = c.gravacaoCapa === 'bordado'
+    if (temGravacao) tempoExtra += t.tempoExtra_gravacao
+    if (temBordado)  tempoExtra += t.tempoExtra_bordado
+  }
+  if ((!R || R.has('pespontosAtivo')) && c.pespontosAtivo) tempoExtra += t.tempoExtra_pespontos
+  if ((!R || R.has('extras-elementos')) && (c.bolsoInterno || c.envelopeContracapa)) tempoExtra += t.tempoExtra_bolso
+  if ((!R || R.has('pinturaBordasAtiva')) && c.pinturaBordasAtiva) tempoExtra += t.tempoExtra_acabamento
 
   const horas_trabalho = Math.round((tempoBase + tempoExtra) * 100) / 100
   const custo_mao_obra = Math.round(horas_trabalho * t.valorHoraArtesa * 100) / 100
-  const custo_fixo     = Math.round((t.custoFixoUnitario ?? 25) * 100) / 100
+
+  // Custo fixo — só aplica se ao menos materialCapa ou espessura foi respondido
+  const temCustoBase = !R || R.has('materialCapa') || R.has('espessura')
+  const custo_fixo   = temCustoBase ? Math.round((t.custoFixoUnitario ?? 25) * 100) / 100 : 0
+
   const custo_total    = Math.round((custo_material + custo_mao_obra + custo_fixo) * 100) / 100
 
   const margemInv      = t.margemInvestimento ?? 10
   const multiplicador  = (1 + t.margemLucro / 100) * (1 + margemInv / 100)
-  const preco_final    = Math.round(custo_total * multiplicador * 100) / 100
+  const preco_final    = custo_total > 0 ? Math.round(custo_total * multiplicador * 100) / 100 : 0
   const margem_valor   = Math.round((preco_final - custo_total) * 100) / 100
 
   return {
